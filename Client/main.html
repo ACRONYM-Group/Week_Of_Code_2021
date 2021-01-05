@@ -1,49 +1,54 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AWOC Project</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>AWOC Project</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
 
-<body onload="startGame()">
-    <header class="navbar">
-        <div class="flexbox">
-            <div class="logoDiv" style="position: relative;">
-                <a href="index.dpy" style="display:flex; padding:0; margin-left:10px;">
-                    <img src="ACRONYM.png" style="width: 40px; height:40px;">
-                    <h3 class="logo">ACRONYM</h3>
-                </a>
-            </div>
-            <div class="dropdownBar"></div>
-            <div class="dropdown">
-                <button class="dropbtn">ACRONYM</button>
-                <div class="dropdown-content">
-                    <a href="signup.dpy">Sign Up</a>
-                </div>
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">About Us</button>
-                <div class="dropdown-content">
-                    <a href="#">Link 1</a>
-                    <a href="#">Link 2</a>
-                </div>
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">Projects</button>
-                <div class="dropdown-content">
-                    <a href="#">Link 1</a>
-                    <a href="#">Link 2</a>
-                    <a href="#">Link 3</a>
-                    <a href="#">Link 4</a>
-                    <a href="#">Link 5</a>
-                </div>
-            </div>
-            <a href="login.dpy" class="loginButton">Log In</a>
-        </div>
-    
-    </header>
-    <script src="main.js"></script>
-</body>
-
+	<body onload="startGame()">
+		<header class="navbar">
+			<div class="flexbox">
+				<div class="logoDiv" style="position: relative">
+					<a
+						href="index.dpy"
+						style="display: flex; padding: 0; margin-left: 10px"
+					>
+						<img
+							src="ACRONYM.png"
+							style="width: 40px; height: 40px"
+						/>
+						<h3 class="logo">ACRONYM</h3>
+					</a>
+				</div>
+				<div class="dropdownBar"></div>
+				<div class="dropdown">
+					<button class="dropbtn">ACRONYM</button>
+					<div class="dropdown-content">
+						<a href="signup.dpy">Sign Up</a>
+					</div>
+				</div>
+				<div class="dropdown">
+					<button class="dropbtn">About Us</button>
+					<div class="dropdown-content">
+						<a href="#">Link 1</a>
+						<a href="#">Link 2</a>
+					</div>
+				</div>
+				<div class="dropdown">
+					<button class="dropbtn">Projects</button>
+					<div class="dropdown-content">
+						<a href="#">Link 1</a>
+						<a href="#">Link 2</a>
+						<a href="#">Link 3</a>
+						<a href="#">Link 4</a>
+						<a href="#">Link 5</a>
+					</div>
+				</div>
+				<a href="login.dpy" class="loginButton">Log In</a>
+			</div>
+		</header>
+		<canvas id="Canvas"></canvas>
+		<script src="main.js"></script>
+	</body>
 </html>

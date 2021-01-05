@@ -1,11 +1,16 @@
-html, body {margin: 0; height: 100%; overflow: hidden}
-
 body
 {
     font-family: Arial, Helvetica, sans-serif;
     margin: 0px;
     background: #333333;
     color: #FFF;
+    height: 100%;
+    overflow: hidden
+}
+
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #f1f1f1;
 }
 
 /* Navbar container */

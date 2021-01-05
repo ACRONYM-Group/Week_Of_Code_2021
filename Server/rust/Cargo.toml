@@ -1,5 +1,5 @@
 [package]
-name = "rust"
+name = "game_server"
 version = "0.1.0"
 authors = ["Ethan <ethandanielhunt@gmail.com>"]
 edition = "2018"
@@ -8,5 +8,6 @@ edition = "2018"
 
 [dependencies]
 aci = { git = "https://github.com/ACRONYM-Group/ACIRustClient", version="0.1.4", branch="main"}
+ansi_term = "0.12.1"
 serde_json = "1.0"
 tokio = {version="0.3.5", features = ["full"]}

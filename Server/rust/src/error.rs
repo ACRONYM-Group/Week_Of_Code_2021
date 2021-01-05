@@ -24,7 +24,9 @@ impl GenericError
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ErrorKind
 {
-    ACIError
+    ACIError,
+    EnvironmentError,
+    ConnectionError
 }
 
 impl std::fmt::Display for GenericError

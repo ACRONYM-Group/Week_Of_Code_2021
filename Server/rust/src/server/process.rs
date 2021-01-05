@@ -30,5 +30,35 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>) -> GenericResult<()>
         conn.read_from_disk("gamedata").await?;
     }
 
+    let block0 = serde_json::json!({"name":"grass", "color":"#009900", "blocks":false});
+    let block1 = serde_json::json!({"name":"wall", "color":"#8f6d0e", "block":true});
+
+    let width = 100;
+    let height = 100;
+
+    let mut data = vec![vec![block0; height]; width];
+
+    for x in 0..width
+    {
+        for y in 0..height
+        {
+            let set = ((x as f64 - 25.0) * (x as f64 - 25.0) + (y as f64 - 25.0) * (y as f64 - 25.0)) < 25.0 * 25.0 ||
+            ((x as f64 - 75.0) * (x as f64 - 75.0) + (y as f64 - 75.0) * (y as f64 - 75.0)) < 25.0 * 25.0;
+
+            if set
+            {
+                data[x][y] = block1.clone();
+            }
+        }
+    }
+
+    debug!("Done building");
+
+    let jsondata = serde_json::json!(data);
+
+    debug!("Done compiling json");
+
+    conn.set_value("gamedata", "map", jsondata).await?;
+
     Ok(())
 }

@@ -33,7 +33,7 @@ impl std::fmt::Display for GenericError
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
     {
-        write!(f, "{} {}", ansi_term::Color::Red.bold().paint("error:"), self.msg)
+        write!(f, "{}", self.msg)
     }
 }
 

@@ -1,5 +1,10 @@
+#[macro_use]
+extern crate log;
+
 mod error;
 use error::GenericResult;
+
+mod logging;
 
 mod server;
 
@@ -8,7 +13,7 @@ async fn main()
 {
     if let Err(error) = run().await
     {
-        eprintln!("{}", error);
+        error!("{}", error);
                   
         std::process::exit(1);
     }
@@ -16,7 +21,11 @@ async fn main()
 
 async fn run() -> GenericResult<()>
 {
+    // Initialize the logger
+    logging::initialize_logging();
+
     // Connect to the server
+    info!("Connecting to server");
     let (conn, listener, _) = aci::connect("35.225.173.218", 8766).await?;
     let conn = std::sync::Arc::new(conn);
 
@@ -37,9 +46,7 @@ async fn run() -> GenericResult<()>
             // Attempt to close the connection, if closing the connection fails, display the nested error
             if let Err(error) = conn.close().await
             {
-                eprintln!("Encountered");
-                eprintln!("{}", error);
-                eprintln!("while handling");
+                error!("{}", error);
             }
 
             // Return the first error

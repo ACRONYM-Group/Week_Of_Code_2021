@@ -5,6 +5,8 @@ use crate::error::ErrorKind;
 /// Execute the main portion of the game server
 pub async fn execute(conn: std::sync::Arc<aci::Connection>) -> GenericResult<()>
 {
+    trace!("Starting server process");
+
     // Retrieve the password from the environment variable
     let password = std::env::var("GAME_SERVER_PASSWORD").map_err(
         |_| GenericError::new("Unable to read server password from environment variable `GAME_SERVER_PASSWORD`".to_string(),
@@ -16,7 +18,7 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>) -> GenericResult<()>
         return Err(GenericError::new("Unable to authenticate with the ACI server".to_string(), ErrorKind::ConnectionError));
     }
 
-    println!("Authenticated with the server successfully");
+    trace!("Authentication Successful");
 
     Ok(())
 }

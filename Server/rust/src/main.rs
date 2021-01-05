@@ -54,7 +54,7 @@ async fn run() -> GenericResult<()>
         }
     }
 
-    println!("Server process exited normally");
+    info!("Server process exited normally");
 
     // The server is done
     Ok(())

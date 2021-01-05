@@ -17,8 +17,18 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>) -> GenericResult<()>
     {
         return Err(GenericError::new("Unable to authenticate with the ACI server".to_string(), ErrorKind::ConnectionError));
     }
+    else
+    {
+        trace!("Authentication Successful");
+    }
+    
+    // If the gamedata database has not been loaded, load it from disk
+    if !conn.list_databases().await?.contains(&"gamedata".to_string())
+    {
+        debug!("Database `gamedata` is not loaded; loading");
 
-    trace!("Authentication Successful");
+        conn.read_from_disk("gamedata").await?;
+    }
 
     Ok(())
 }

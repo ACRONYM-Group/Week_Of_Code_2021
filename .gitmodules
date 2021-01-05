@@ -1,0 +1,3 @@
+[submodule "Client/ACIJS"]
+	path = Client/ACIJS
+	url = https://github.com/ACRONYM-Group/ACIJS

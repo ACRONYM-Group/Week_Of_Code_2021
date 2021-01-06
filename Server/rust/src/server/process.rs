@@ -2,6 +2,8 @@ use crate::error::GenericResult;
 use crate::error::GenericError;
 use crate::error::ErrorKind;
 
+use super::map;
+
 /// Execute the main portion of the game server
 pub async fn execute(conn: std::sync::Arc<aci::Connection>) -> GenericResult<()>
 {
@@ -11,11 +13,13 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>) -> GenericResult<()>
     let password = std::env::var("GAME_SERVER_PASSWORD").map_err(
         |_| GenericError::new("Unable to read server password from environment variable `GAME_SERVER_PASSWORD`".to_string(),
             ErrorKind::EnvironmentError))?;
+
+    debug!("Using password `{}`", password);
     
     // Attempt to authenticate with the server
-    if !conn.a_auth("bots.woc_2021", &password).await?
+    if !conn.a_auth("bots.woc_2021", &password).await? //
     {
-        return Err(GenericError::new("Unable to authenticate with the ACI server".to_string(), ErrorKind::ConnectionError));
+        return Err(GenericError::new("Authentication with ACI server failed".to_string(), ErrorKind::ConnectionError));
     }
     else
     {
@@ -30,35 +34,74 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>) -> GenericResult<()>
         conn.read_from_disk("gamedata").await?;
     }
 
-    let block0 = serde_json::json!({"name":"grass", "color":"#009900", "blocks":false});
-    let block1 = serde_json::json!({"name":"wall", "color":"#8f6d0e", "block":true});
+    info!("Creating Map");
+    let map_data = std::sync::Arc::new(map::Map::new());
 
-    let width = 100;
-    let height = 100;
+    /*
+    info!("Clearing the map on the server");
+    conn.set_value("gamedata", "map", json!(vec![0u8; map::NUM_CHUNKS])).await?;
 
-    let mut data = vec![vec![block0; height]; width];
+    info!("Starting Map Write");
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<Result<(), aci::errors::ACIError>>(map::NUM_CHUNKS);
+    let tx = std::sync::Arc::new(tx);
 
-    for x in 0..width
-    {
-        for y in 0..height
+    let reciever = tokio::spawn(async move
         {
-            let set = ((x as f64 - 25.0) * (x as f64 - 25.0) + (y as f64 - 25.0) * (y as f64 - 25.0)) < 25.0 * 25.0 ||
-            ((x as f64 - 75.0) * (x as f64 - 75.0) + (y as f64 - 75.0) * (y as f64 - 75.0)) < 25.0 * 25.0;
-
-            if set
+            let mut recieved = 0;
+            let mut last_percent = 0;
+            while recieved < map::NUM_CHUNKS
             {
-                data[x][y] = block1.clone();
+                if let Some(r) = rx.recv().await
+                {
+                    if r.is_err()
+                    {
+                        return r;
+                    };
+
+                    recieved += 1;
+
+                    let current_percent = recieved * 100 / map::NUM_CHUNKS;
+                    if (recieved + 1) * 100 / map::NUM_CHUNKS > last_percent
+                    {
+                        last_percent = current_percent;
+                        trace!("{}% Done", last_percent);
+                    }
+                }
             }
+
+            Ok(())
         }
+    );
+
+    for i in 0..map::NUM_CHUNKS
+    {
+        let tx = tx.clone();
+        let conn = conn.clone();
+        let map_data = map_data.clone();
+        tokio::spawn(
+            async move
+            {
+                tx.send(conn.set_index("gamedata", "map", i, serde_json::Value::from(&map_data.chunks[i])).await).await.unwrap();
+            }
+        );
     }
+    info!("Done Performing Sends");
 
-    debug!("Done building");
+    tokio::join!(reciever).0.map_err(|_| GenericError::new("Map send handler failed".to_string(), ErrorKind::ConnectionError))??;
 
-    let jsondata = serde_json::json!(data);
+    info!("Done Writing Map Data!");*/
 
-    debug!("Done compiling json");
+    info!("Creating JSON");
+    let json_data = json!(map_data.chunks.iter().map(|c| c.to_string()).collect::<String>());
 
-    conn.set_value("gamedata", "map", jsondata).await?;
+    info!("Clearing the map on the server");
+    let setter = tokio::spawn(async move {conn.set_value("gamedata", "map", json_data).await});
+
+    info!("Done Sending");
+
+    tokio::join!(setter).0.map_err(|_| GenericError::new("Map send handler failed".to_string(), ErrorKind::ConnectionError))??;
+
+    info!("Done Writing Map Data!");
 
     Ok(())
 }

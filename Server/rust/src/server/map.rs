@@ -2,6 +2,8 @@ const CHUNK_SIZE: usize = 100;
 const MAP_SIZE: usize = 5000;
 const MAP_SIZE_CHUNKS: usize = MAP_SIZE / CHUNK_SIZE;
 
+pub const NUM_CHUNKS: usize = MAP_SIZE_CHUNKS * MAP_SIZE_CHUNKS;
+
 /// Map Data
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MapElement
@@ -36,10 +38,10 @@ impl std::default::Default for MapElement
 }
 
 /// Map Chunk
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Chunk
 {
-    data: [MapElement; CHUNK_SIZE * CHUNK_SIZE]
+    data: Vec<MapElement>
 }
 
 impl Chunk
@@ -49,7 +51,7 @@ impl Chunk
     {
         Self
         {
-            data: [MapElement::default(); CHUNK_SIZE * CHUNK_SIZE]
+            data: vec![MapElement::default(); CHUNK_SIZE * CHUNK_SIZE]
         }
     }
 
@@ -77,13 +79,21 @@ impl std::fmt::Display for Chunk
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error>
     {
-        for v in &self.data
+        for v in self.data.iter()
         {
             write!(f, "{}", v.to_string())?;
         }
 
         Ok(())
     }
+}
+
+impl std::convert::From<&Chunk> for serde_json::Value
+{
+    fn from(chunk: &Chunk) -> Self
+    {
+        serde_json::json!(chunk.to_string())
+    } 
 }
 
 impl std::default::Default for Chunk
@@ -97,17 +107,17 @@ impl std::default::Default for Chunk
 /// The global map
 pub struct Map
 {
-    chunks: [Chunk; MAP_SIZE_CHUNKS * MAP_SIZE_CHUNKS]
+    pub chunks: Vec<Chunk>
 }
 
 impl Map
 {
-    /// Create a new, empty chunk
+    /// Create a new, empty map
     pub fn new() -> Self
     {
         Self
         {
-            chunks: [Chunk::default(); MAP_SIZE_CHUNKS * MAP_SIZE_CHUNKS]
+            chunks: vec![Chunk::default(); MAP_SIZE_CHUNKS * MAP_SIZE_CHUNKS]
         }
     }
 
@@ -147,13 +157,5 @@ impl Map
     {
         let (ci, (x, y)) = Self::get_index(x, y); 
         self.chunks[ci].get_mut(x, y)
-    }
-}
-
-impl std::convert::From<Map> for serde_json::Value
-{
-    fn from(map: Map) -> Self
-    {
-        serde_json::json!(map.chunks.iter().map(|c| c.to_string()))
     }
 }

@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate serde_json;
+
 mod error;
 use error::GenericResult;
 
@@ -26,10 +29,12 @@ async fn run() -> GenericResult<()>
 
     // Connect to the server
     info!("Connecting to server");
-    let (conn, listener, _) = aci::connect("35.225.173.218", 8766).await?;
+    let ip = "35.225.173.218";
+    let (conn, listener, _) = aci::connect(ip, 8766).await?;
     let conn = std::sync::Arc::new(conn);
 
     // Start the listener
+    info!("Spawning Listener");
     tokio::spawn(listener);
 
     // Start the server process

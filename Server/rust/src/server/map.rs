@@ -28,6 +28,22 @@ impl std::fmt::Display for MapElement
     }
 }
 
+impl std::str::FromStr for MapElement
+{
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err>
+    {
+        match s
+        {
+            "g" => Ok(MapElement::Grass),
+            "s" => Ok(MapElement::Stone),
+            "w" => Ok(MapElement::Wall),
+            default => Err(format!("Unknown symbol `{}`", default))
+        }
+    }
+}
+
 // Default map element
 impl std::default::Default for MapElement
 {
@@ -88,6 +104,29 @@ impl std::fmt::Display for Chunk
     }
 }
 
+impl std::str::FromStr for Chunk
+{
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err>
+    {
+        if s.len() != CHUNK_SIZE * CHUNK_SIZE
+        {
+            return Err(format!("Size `{}` is not the required chunk size {}", s.len(), CHUNK_SIZE * CHUNK_SIZE));
+        }
+
+        let mut data = Vec::new();
+        for c in s.as_bytes()
+        {
+            data.push(str::parse::<MapElement>(
+                std::str::from_utf8(&[*c]).map_err(|e| format!("Cannot convert to utf8 `{}`", e))?
+            )?);
+        }
+
+        Ok(Self{data})
+    }
+}
+
 impl std::convert::From<&Chunk> for serde_json::Value
 {
     fn from(chunk: &Chunk) -> Self
@@ -118,6 +157,15 @@ impl Map
         Self
         {
             chunks: vec![Chunk::default(); MAP_SIZE_CHUNKS * MAP_SIZE_CHUNKS]
+        }
+    }
+
+    /// Generate a new map from a set of chunks
+    pub fn from_chunks(chunks: Vec<Chunk>) -> Self
+    {
+        Self
+        {
+            chunks
         }
     }
 

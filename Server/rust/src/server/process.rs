@@ -59,9 +59,32 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
     else
     {
         info!("Loading data from server");
-        let _data = conn.get_value("gamedata", "map").await?;
+        let data = conn.get_value("gamedata", "map").await?;
 
-        unimplemented!()
+        debug!("Parsing data from server");
+        if let serde_json::Value::Array(data) = data
+        {
+            let mut chunks = Vec::new();
+
+            for val in data
+            {
+                if let serde_json::Value::String(s) = val
+                {
+                    chunks.push(str::parse::<map::Chunk>(&s).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?)
+                }
+                else
+                {
+                    return Err(GenericError::new(format!("Mapdata entry is not a string"), ErrorKind::ParsingError));
+                }
+            }
+
+            map::Map::from_chunks(chunks)
+        }
+        else
+        {
+            return Err(GenericError::new(format!("Mapdata is not an array"), ErrorKind::ParsingError));
+            unreachable!()
+        }
     };
 
     Ok(())

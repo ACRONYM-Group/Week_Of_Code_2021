@@ -34,6 +34,13 @@ var myGameArea = {
 		window.addEventListener("keyup", function (e) {
 			myGameArea.keys[e.keyCode] = e.type == "keydown";
 		});
+
+		//mouse movement listener
+		canvas.addEventListener("mousemove", function (e) {
+			var cRect = canvas.getBoundingClientRect(); // Gets CSS pos, and width/height
+			myGameArea.mouseX = Math.round(e.clientX - cRect.left); // Subtract the 'left' of the canvas
+			myGameArea.mouseY = Math.round(e.clientY - cRect.top); // from the X/Y positions to make
+		});
 	},
 
 	//stop game loop
@@ -56,9 +63,9 @@ function component(width, height, color, x, y, type) {
 	}
 	this.width = width;
 	this.height = height;
-	this.speed = 0;
+    this.speedX = 0;
+	this.speedY = 0;   
 	this.angle = 0;
-	this.moveAngle = 0;
 	this.x = x;
 	this.y = y;
 
@@ -91,10 +98,13 @@ function component(width, height, color, x, y, type) {
 	};
 
 	//update understanding of where it is
-	this.newPos = function () {
-		this.angle += (this.moveAngle * Math.PI) / 180;
-		this.x += this.speed * Math.sin(this.angle);
-		this.y -= this.speed * Math.cos(this.angle);
+	this.newPos = function (mouseX, mouseY) {
+		this.x += this.speedX;
+		this.y += this.speedY;
+		this.mouseX = mouseX;
+		this.mouseY = mouseY;
+		this.angle = ((Math.atan2((mouseX- this.x), (this.y - mouseY))));
+		
 	};
 }
 
@@ -106,30 +116,31 @@ function updateGameArea() {
 	//reset rate of rotation
 	myGamePiece.moveAngle = 0;
 
-	//reset speed at which the block is moving
-	myGamePiece.speed = 0;
+	//reset speed at which the character is moving
+    myGamePiece.speedX = 0;
+	myGamePiece.speedY = 0; 
 
 	//if keys are pressed change either the angle the character is rotating in or the speed it's moving.
 
 	//left | a = 65, arrow left = 37
 	if (myGameArea.keys && (myGameArea.keys[65] || myGameArea.keys[37])) {
-		myGamePiece.moveAngle = -1;
+		myGamePiece.speedX = -1;
 	}
 
 	//right | d = 68, arrow right = 39
 	if (myGameArea.keys && (myGameArea.keys[68] || myGameArea.keys[39])) {
-		myGamePiece.moveAngle = 1;
+		myGamePiece.speedX = 1;
 	}
 
 	//up | w = 87, arrow up = 38
 	if (myGameArea.keys && (myGameArea.keys[87] || myGameArea.keys[38])) {
-		myGamePiece.speed = 1;
+		myGamePiece.speedY = -1;
 	}
 
 	//down | s = 83, arrow down = 40
 	if (myGameArea.keys && (myGameArea.keys[83] || myGameArea.keys[40])) {
-		myGamePiece.speed = -1;
+		myGamePiece.speedY = 1;
 	}
-	myGamePiece.newPos();
+	myGamePiece.newPos(myGameArea.mouseX, myGameArea.mouseY);
 	myGamePiece.update();
 }

@@ -26,7 +26,8 @@ pub enum ErrorKind
 {
     ACIError,
     EnvironmentError,
-    ConnectionError
+    ConnectionError,
+    ParsingError
 }
 
 impl std::fmt::Display for GenericError

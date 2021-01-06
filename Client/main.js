@@ -9,6 +9,10 @@ function onConnected() {
     );
 }
 
+function set_tile_brush(type) {
+    tile_type_to_draw = type;
+}
+
 function onMessage(data) {
     if (data["key"] == "map" && data["db_key"] == "gamedata") {
         console.log("Got Grid");
@@ -32,6 +36,7 @@ ACIConnection.start();
 var myGamePiece;
 var units = [];
 var tile_size = 32;
+var tile_type_to_draw = "s";
 var keyboard = [];
 var grid = [];
 tile_types = [{"name":"grass", "color":"#009900", "blocks":false, "spawn_chance":0.9},{"name":"stone", "color":"#999999", "tiles":false, "spawn_chance":0.3},{"name":"wall", "color":"#8f6d0e", "block":true, "spawn_chance":0.05}]
@@ -54,7 +59,6 @@ function loop() {
 }
 
 function draw_grid() {
-    console.log(camera_x_offset);
     if (camera_x_offset > 100) {
         camera_x_offset = 100;
     } else if (camera_x_offset < -(100*tile_size-canvas.clientWidth) - 100) {
@@ -70,6 +74,7 @@ function draw_grid() {
     var n = d.getTime();
     w = 0;
     g = 0;
+    s = 0;
 
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
@@ -89,6 +94,9 @@ function draw_grid() {
             } else if (tile_type == "w") {
                 ctx.fillStyle = "#8f6d0e";
                 w += 1;
+            } else if (tile_type == "s") {
+                ctx.fillStyle = "#999999";
+                s += 1;
             }
             ctx.fillRect(canvas_x+camera_x_offset, canvas_y+camera_y_offset, tile_size-1, tile_size-1);
         }
@@ -210,6 +218,7 @@ ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
 
 var mouse_is_down = false;
+var right_mouse_is_down = false;
 var last_mouse_x = 0;
 var last_mouse_y = 0;
 var camera_x_offset = 0;
@@ -218,25 +227,47 @@ canvas.addEventListener("mousemove", e => {
     if (mouse_is_down) {
         camera_x_offset += e.x - last_mouse_x;
         camera_y_offset += e.y - last_mouse_y;
-        last_mouse_x = e.x;
-        last_mouse_y = e.y;
+        var cRect = canvas.getBoundingClientRect(); // Gets CSS pos, and width/height
+        last_mouse_x = Math.round(e.clientX - cRect.left); // Subtract the 'left' of the canvas
+        last_mouse_y = Math.round(e.clientY - cRect.top); // from the X/Y positions to make
     }
-
     var cRect = canvas.getBoundingClientRect(); // Gets CSS pos, and width/height
-    //myGameArea.mouseX = Math.round(e.clientX - cRect.left); // Subtract the 'left' of the canvas
-    //myGameArea.mouseY = Math.round(e.clientY - cRect.top); // from the X/Y positions to make
-    last_mouse_x = e.x;
-    last_mouse_y = e.y;
+    last_mouse_x = Math.round(e.clientX - cRect.left); // Subtract the 'left' of the canvas
+    last_mouse_y = Math.round(e.clientY - cRect.top); // from the X/Y positions to make
+
+    if (right_mouse_is_down) {
+        draw_tile_x = Math.round((last_mouse_x-camera_x_offset)/tile_size);
+        draw_tile_y = Math.round((last_mouse_y-camera_y_offset)/tile_size);
+        sequential_tile_number = draw_tile_y*100+draw_tile_x;
+        console.log(draw_tile_x + " - " + draw_tile_y + " - " + sequential_tile_number);
+        grid[0] = grid[0].substring(0, sequential_tile_number) + tile_type_to_draw + grid[0].substring(sequential_tile_number + 1);
+        console.log(grid);
+    }
 });
 
 canvas.addEventListener("mousedown", e => {
-    mouse_is_down = true;
-    last_mouse_x = e.x;
-    last_mouse_y = e.y;
+    if (e.button == 0) {
+        mouse_is_down = true;
+
+        var cRect = canvas.getBoundingClientRect(); // Gets CSS pos, and width/height
+        last_mouse_x = Math.round(e.clientX - cRect.left); // Subtract the 'left' of the canvas
+        last_mouse_y = Math.round(e.clientY - cRect.top); // from the X/Y positions to make
+    }
+
+    if (e.button == 1) {
+        console.log("right mouse is down");
+        right_mouse_is_down = true;
+    }
 });
 
 canvas.addEventListener("mouseup", e => {
-    mouse_is_down = false;
+    if (e.button == 0) {
+        mouse_is_down = false;
+    }
+
+    if (e.button == 1) {
+        right_mouse_is_down = false;
+    }
 });
 
 

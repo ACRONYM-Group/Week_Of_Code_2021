@@ -8,6 +8,34 @@ body
     color: #FFF;
 }
 
+#paint_bar 
+{
+    position: absolute;
+    right: 0;
+    top:15%;
+    width: 50px;
+    height: 70%;
+    z-index: 3;
+    background-color: #222222;
+}
+
+.paint_icon
+{
+    width: 30px;
+    height: 30px;
+    margin: auto;
+    margin-top: 15px;
+}
+
+.paint_icon:hover
+{
+    cursor: pointer;
+}
+
+#canvas
+{
+    z-index: 1;
+}
 /* Navbar container */
 .navbar 
 {

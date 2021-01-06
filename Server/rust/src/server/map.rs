@@ -1,8 +1,8 @@
+#![allow(dead_code)]
+
 const CHUNK_SIZE: usize = 100;
 const MAP_SIZE: usize = 5000;
 const MAP_SIZE_CHUNKS: usize = MAP_SIZE / CHUNK_SIZE;
-
-pub const NUM_CHUNKS: usize = MAP_SIZE_CHUNKS * MAP_SIZE_CHUNKS;
 
 /// Map Data
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -158,4 +158,23 @@ impl Map
         let (ci, (x, y)) = Self::get_index(x, y); 
         self.chunks[ci].get_mut(x, y)
     }
+}
+
+/// Generate the test map
+pub fn generate_test_map() -> Map
+{
+    info!("Generating Test Map");
+    let mut map = Map::new();
+
+    for x in 500..=1000
+    {
+        for y in 500..=1000
+        {
+            *map.get_mut(x, y) = MapElement::Wall;
+        }
+    }
+
+    debug!("Done Generating Test Map");
+
+    map
 }

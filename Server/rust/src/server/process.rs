@@ -5,7 +5,7 @@ use crate::error::ErrorKind;
 use super::map;
 
 /// Execute the main portion of the game server
-pub async fn execute(conn: std::sync::Arc<aci::Connection>) -> GenericResult<()>
+pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args::Arguments) -> GenericResult<()>
 {
     trace!("Starting server process");
 
@@ -34,28 +34,35 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>) -> GenericResult<()>
         conn.read_from_disk("gamedata").await?;
     }
 
-    info!("Creating Map");
-    let mut map_data = map::Map::new();
-
-    for x in 500..=1000
+    // Load the map, either from the server, or generating the map here
+    let _map = if !options.load_map
     {
-        for y in 500..=1000
+        let map_data = map::generate_test_map();
+
+        if options.reload_map
         {
-            *map_data.get_mut(x, y) = map::MapElement::Wall;
+            info!("Creating JSON");
+            let json_data = json!(map_data.chunks.iter().map(|c| c.to_string()).collect::<Vec<String>>());
+
+            info!("Clearing the map on the server");
+            let setter = tokio::spawn(async move {conn.set_value("gamedata", "map", json_data).await});
+
+            info!("Done Sending");
+
+            tokio::join!(setter).0.map_err(|_| GenericError::new("Map send handler failed".to_string(), ErrorKind::ConnectionError))??;
+
+            info!("Done Writing Map Data!");
         }
+
+        map_data
     }
+    else
+    {
+        info!("Loading data from server");
+        let _data = conn.get_value("gamedata", "map").await?;
 
-    info!("Creating JSON");
-    let json_data = json!(map_data.chunks.iter().map(|c| c.to_string()).collect::<String>());
-
-    info!("Clearing the map on the server");
-    let setter = tokio::spawn(async move {conn.set_value("gamedata", "map", json_data).await});
-
-    info!("Done Sending");
-
-    tokio::join!(setter).0.map_err(|_| GenericError::new("Map send handler failed".to_string(), ErrorKind::ConnectionError))??;
-
-    info!("Done Writing Map Data!");
+        unimplemented!()
+    };
 
     Ok(())
 }

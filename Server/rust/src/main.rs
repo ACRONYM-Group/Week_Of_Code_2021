@@ -4,11 +4,12 @@ extern crate log;
 #[macro_use]
 extern crate serde_json;
 
+use structopt::StructOpt;
+
+mod args;
 mod error;
 use error::GenericResult;
-
 mod logging;
-
 mod server;
 
 #[tokio::main]
@@ -27,6 +28,9 @@ async fn run() -> GenericResult<()>
     // Initialize the logger
     logging::initialize_logging();
 
+    // Load options from arguments
+    let opts = args::Arguments::from_args();
+
     // Connect to the server
     info!("Connecting to server");
     let ip = "35.225.173.218";
@@ -38,7 +42,7 @@ async fn run() -> GenericResult<()>
     tokio::spawn(listener);
 
     // Start the server process
-    match server::execute(conn.clone()).await
+    match server::execute(conn.clone(), opts).await
     {
         // If the server process exits normally, close the connection
         Ok(()) =>

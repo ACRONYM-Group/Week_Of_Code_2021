@@ -1,3 +1,18 @@
+function onConnected() {}
+
+function onMessage(data) {
+	if (data["key"] == "map" && data["db_key"] == "gamedata") {
+		console.log("Got Grid");
+		grid = data["val"];
+		var d = new Date();
+		var n = d.getTime();
+		console.log(n);
+		draw_grid();
+	}
+	console.log(data);
+	setInterval(draw_grid, 100);
+}
+
 var myGamePiece;
 
 //main
@@ -63,8 +78,8 @@ function component(width, height, color, x, y, type) {
 	}
 	this.width = width;
 	this.height = height;
-    this.speedX = 0;
-	this.speedY = 0;   
+	this.speedX = 0;
+	this.speedY = 0;
 	this.angle = 0;
 	this.x = x;
 	this.y = y;
@@ -103,8 +118,7 @@ function component(width, height, color, x, y, type) {
 		this.y += this.speedY;
 		this.mouseX = mouseX;
 		this.mouseY = mouseY;
-		this.angle = ((Math.atan2((mouseX- this.x), (this.y - mouseY))));
-		
+		this.angle = Math.atan2(mouseX - this.x, this.y - mouseY);
 	};
 }
 
@@ -117,8 +131,8 @@ function updateGameArea() {
 	myGamePiece.moveAngle = 0;
 
 	//reset speed at which the character is moving
-    myGamePiece.speedX = 0;
-	myGamePiece.speedY = 0; 
+	myGamePiece.speedX = 0;
+	myGamePiece.speedY = 0;
 
 	//if keys are pressed change either the angle the character is rotating in or the speed it's moving.
 

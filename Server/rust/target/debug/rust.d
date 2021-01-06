@@ -1,1 +1,0 @@
-C:\Users\ethan.ETHAN-DESKTOP\OneDrive\Documents\CodeSpace\AWOC2021\Week_Of_Code_2021\Server\rust\target\debug\rust.exe: C:\Users\ethan.ETHAN-DESKTOP\OneDrive\Documents\CodeSpace\AWOC2021\Week_Of_Code_2021\Server\rust\src\main.rs

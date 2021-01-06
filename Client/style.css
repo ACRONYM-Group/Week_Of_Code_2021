@@ -371,7 +371,7 @@ button:active {
 }
 
 .acornTable tr th {
-	align: center;
+	align-content: center;
 	padding: 5px;
 	padding-left: 50px;
 	padding-right: 50px;

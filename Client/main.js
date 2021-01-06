@@ -9,7 +9,10 @@ function onMessage(data) {
         var d = new Date();
         var n = d.getTime();
         console.log(n);
+        draw_grid();
     }
+    console.log(data);
+    setInterval(draw_grid, 100);
 }
 
 ACIConnection = new connection("scienceandpizza.com", 8766, onConnected, onMessage);
@@ -63,14 +66,42 @@ function generate_grid(width, height) {
 }
 
 function draw_grid() {
-    //tile_size = canvas.clientWidth/grid.length;
-    tile_size = 15;
-    for (var x = 0; x < grid.length; x++) {
-        for (var y = 0; y < grid[x].length; y++) {
-            ctx.fillStyle = grid[x][y].color;
-            ctx.fillRect(x*tile_size, y*tile_size, tile_size, tile_size);
+    tile_size = 16;
+    console.log("Drawing");
+    var d = new Date();
+    var n = d.getTime();
+    console.log(n);
+    w = 0;
+    g = 0;
+
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    for (var chunk = 0; chunk < 1; chunk++) {
+        for (var tile = 0; tile < 10000; tile++) {
+            chunk_y = Math.floor(chunk/50);
+            chunk_x = chunk - (chunk_y*50);
+            tile_y = Math.floor(tile/100);
+            tile_x = tile - (tile_y*100);
+            canvas_x = (chunk_x*100*tile_size) + (tile_x*tile_size);
+            canvas_y = (chunk_y*100*tile_size) + (tile_y*tile_size);
+
+            tile_type = grid[chunk][tile];
+            if (tile_type == "g") {
+                ctx.fillStyle = "#00FF00";
+                g += 1;
+            } else if (tile_type == "w") {
+                ctx.fillStyle = "#8f6d0e";
+                w += 1;
+            }
+            ctx.fillRect(canvas_x+camera_x_offset, canvas_y+camera_y_offset, tile_size-1, tile_size-1);
         }
     }
+
+    console.log("w " + w);
+    console.log("g " + g);
+    var d = new Date();
+    var n = d.getTime();
+    console.log(n);
 }
 
 canvas = document.getElementById("canvas");
@@ -89,6 +120,28 @@ setTimeout(function() {
     var d = new Date();
     var n = d.getTime();
     console.log(n);
-}, 1000);
+}, 5000);
 
-setInterval(draw_grid, 500);
+var mouse_is_down = false;
+var last_mouse_x = 0;
+var last_mouse_y = 0;
+var camera_x_offset = 0;
+var camera_y_offset = 0;
+canvas.addEventListener("mousemove", e => {
+    if (mouse_is_down) {
+        camera_x_offset += e.x - last_mouse_x;
+        camera_y_offset += e.y - last_mouse_y;
+        last_mouse_x = e.x;
+        last_mouse_y = e.y;
+    }
+});
+
+canvas.addEventListener("mousedown", e => {
+    mouse_is_down = true;
+    last_mouse_x = e.x;
+    last_mouse_y = e.y;
+});
+
+canvas.addEventListener("mouseup", e => {
+    mouse_is_down = false;
+});

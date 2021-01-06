@@ -17,7 +17,7 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
     debug!("Using password `{}`", password);
     
     // Attempt to authenticate with the server
-    if !conn.a_auth("bots.woc_2021", &password).await? //
+    if !conn.a_auth("bots.woc_2021", &password).await?
     {
         return Err(GenericError::new("Authentication with ACI server failed".to_string(), ErrorKind::ConnectionError));
     }

@@ -1,3 +1,4 @@
+use crate::error::{GenericError, GenericResult, ErrorKind};
 use super::{CHUNK_SIZE, MAP_SIZE_CHUNKS, Chunk, MapElement};
 
 /// The global map
@@ -68,5 +69,44 @@ impl Map
     pub fn check_collision(&self, x: f64, y: f64) -> bool
     {
         self.get(x as usize, y as usize).walking_speed().is_none()
+    }
+}
+
+impl std::convert::From<&Map> for serde_json::Value
+{
+    fn from(map: &Map) -> Self
+    {
+        json!(map.chunks.iter().map(|c| c.to_string()).collect::<Vec<String>>())
+    }
+}
+
+impl std::convert::TryFrom<serde_json::Value> for Map
+{
+    type Error = GenericError;
+
+    fn try_from(data: serde_json::Value) -> GenericResult<Map>
+    {
+        if let serde_json::Value::Array(data) = data
+        {
+            let mut chunks = Vec::new();
+
+            for val in data
+            {
+                if let serde_json::Value::String(s) = val
+                {
+                    chunks.push(str::parse::<Chunk>(&s).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?)
+                }
+                else
+                {
+                    return Err(GenericError::new(format!("Mapdata entry is not a string"), ErrorKind::ParsingError));
+                }
+            }
+
+            Ok(Map::from_chunks(chunks))
+        }
+        else
+        {
+            return Err(GenericError::new(format!("Mapdata is not an array"), ErrorKind::ParsingError));
+        }
     }
 }

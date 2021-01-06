@@ -67,6 +67,12 @@ function generate_grid(width, height) {
 function draw_grid() {
     //tile_size = canvas.clientWidth/grid.length;
     tile_size = 1;
+    console.log("Drawing");
+    var d = new Date();
+    var n = d.getTime();
+    console.log(n);
+    w = 0;
+    g = 0;
     // for (var x = 0; x < grid.length; x++) {
     //     for (var y = 0; y < grid[x].length; y++) {
     //         ctx.fillStyle = grid[x][y].color;
@@ -75,38 +81,50 @@ function draw_grid() {
     // }
 
 
-    // for (var chunk = 0; chunk < 25000; chunk++) {
-    //     for (var tile = 0; tile < 10000; tile++) {
-    //         chunk_y = Math.floor(chunk/50);
-    //         chunk_x = chunk - (chunk_y*50);
-    //         tile_y = Math.floor(tile/100);
-    //         tile_x = tile - (tile_y*100);
-    //         canvas_x = (chunk_x*100*tile_size) + (tile_x*tile_size);
-    //         canvas_y = (chunk_y*100*tile_size) + (tile_y*tile_size);
+    for (var chunk = 0; chunk < 25000; chunk++) {
+        for (var tile = 0; tile < 10000; tile++) {
+            chunk_y = Math.floor(chunk/50);
+            chunk_x = chunk - (chunk_y*50);
+            tile_y = Math.floor(tile/100);
+            tile_x = tile - (tile_y*100);
+            canvas_x = (chunk_x*100*tile_size) + (tile_x*tile_size);
+            canvas_y = (chunk_y*100*tile_size) + (tile_y*tile_size);
 
-    //         ctx.fillRect(canvas_x*tile_size, canvas_y*tile_size, tile_size, tile_size);
-    //     }
-    // }
+            tile_type = grid[chunk][tile];
+            if (tile_type == "g") {
+                ctx.fillStyle = "#00FF00";
+                w += 1;
+            } else if (tile_type == "w") {
+                ctx.fillStyle = "#8f6d0e";
+                g += 1;
+            }
 
-    console.log("Drawing");
-    var d = new Date();
-    var n = d.getTime();
-    console.log(n);
-    for (var tile = 0; tile < 25000000; tile++) {
-        if (Math.floor(tile/100000) == tile/100000) {
-            console.log(tile);
+            ctx.fillRect(canvas_x*tile_size, canvas_y*tile_size, tile_size, tile_size);
         }
-        tile_y = Math.floor(tile/5000);
-        tile_x = tile - (tile_y*5000);
-        tile_type = grid.charAt(tile);
-        if (tile_type = "g") {
-            ctx.fillStyle = "#00FF00";
-        }
-        ctx.fillRect(tile_x*tile_size, tile_y*tile_size, tile_size, tile_size);
     }
+
+    console.log("w " + w);
+    console.log("g " + g);
+    console.log(grid.charAt(2500500));
     var d = new Date();
     var n = d.getTime();
     console.log(n);
+    // for (var tile = 0; tile < 25000000; tile++) {
+    //     if (Math.floor(tile/100000) == tile/100000) {
+    //         console.log(tile);
+    //     }
+    //     tile_y = Math.floor(tile/5000);
+    //     tile_x = tile - (tile_y*5000);
+    //     tile_type = grid.charAt(tile);
+    //     if (tile_type == "g") {
+    //         ctx.fillStyle = "#00FF00";
+    //         w += 1;
+    //     } else if (tile_type == "w") {
+    //         ctx.fillStyle = "#8f6d0e";
+    //         g += 1;
+    //     }
+    //     ctx.fillRect(tile_x*tile_size, tile_y*tile_size, tile_size, tile_size);
+    // }
 }
 
 canvas = document.getElementById("canvas");

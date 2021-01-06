@@ -35,61 +35,15 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>) -> GenericResult<()>
     }
 
     info!("Creating Map");
-    let map_data = std::sync::Arc::new(map::Map::new());
+    let mut map_data = map::Map::new();
 
-    /*
-    info!("Clearing the map on the server");
-    conn.set_value("gamedata", "map", json!(vec![0u8; map::NUM_CHUNKS])).await?;
-
-    info!("Starting Map Write");
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<Result<(), aci::errors::ACIError>>(map::NUM_CHUNKS);
-    let tx = std::sync::Arc::new(tx);
-
-    let reciever = tokio::spawn(async move
-        {
-            let mut recieved = 0;
-            let mut last_percent = 0;
-            while recieved < map::NUM_CHUNKS
-            {
-                if let Some(r) = rx.recv().await
-                {
-                    if r.is_err()
-                    {
-                        return r;
-                    };
-
-                    recieved += 1;
-
-                    let current_percent = recieved * 100 / map::NUM_CHUNKS;
-                    if (recieved + 1) * 100 / map::NUM_CHUNKS > last_percent
-                    {
-                        last_percent = current_percent;
-                        trace!("{}% Done", last_percent);
-                    }
-                }
-            }
-
-            Ok(())
-        }
-    );
-
-    for i in 0..map::NUM_CHUNKS
+    for x in 500..=1000
     {
-        let tx = tx.clone();
-        let conn = conn.clone();
-        let map_data = map_data.clone();
-        tokio::spawn(
-            async move
-            {
-                tx.send(conn.set_index("gamedata", "map", i, serde_json::Value::from(&map_data.chunks[i])).await).await.unwrap();
-            }
-        );
+        for y in 500..=1000
+        {
+            *map_data.get_mut(x, y) = map::MapElement::Wall;
+        }
     }
-    info!("Done Performing Sends");
-
-    tokio::join!(reciever).0.map_err(|_| GenericError::new("Map send handler failed".to_string(), ErrorKind::ConnectionError))??;
-
-    info!("Done Writing Map Data!");*/
 
     info!("Creating JSON");
     let json_data = json!(map_data.chunks.iter().map(|c| c.to_string()).collect::<String>());

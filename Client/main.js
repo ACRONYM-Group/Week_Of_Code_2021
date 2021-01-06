@@ -1,5 +1,12 @@
 function onConnected() {
-
+    myGamePiece = new component(
+        64,
+        64,
+        "beta-player.png",
+        window.innerWidth / 2,
+        window.innerHeight / 2,
+        "image"
+    );
 }
 
 function onMessage(data) {
@@ -10,14 +17,22 @@ function onMessage(data) {
         var n = d.getTime();
         console.log(n);
         draw_grid();
+        setInterval(loop, 10);
+
+        for (var i = 0; i < 70; i++) {
+            units.push(new component(64, 64, "beta-player.png", getRandomInt(100*tile_size), getRandomInt(100*tile_size), "image"));
+        }
     }
     console.log(data);
-    setInterval(draw_grid, 100);
 }
 
 ACIConnection = new connection("scienceandpizza.com", 8766, onConnected, onMessage);
 ACIConnection.start();
 
+var myGamePiece;
+var units = [];
+var tile_size = 32;
+var keyboard = [];
 var grid = [];
 tile_types = [{"name":"grass", "color":"#009900", "blocks":false, "spawn_chance":0.9},{"name":"stone", "color":"#999999", "tiles":false, "spawn_chance":0.3},{"name":"wall", "color":"#8f6d0e", "block":true, "spawn_chance":0.05}]
 function getRandomInt(max) {
@@ -32,45 +47,27 @@ class tile {
     }
 }
 
-function generate_grid(width, height) {
-    for (var x= 0; x < width; x++) {
-        grid[x] = []
-        console.log(x);
-        for (var y = 0; y < height; y++) {
-            choosen_type = 0;
-            choosen_type_priority = 0;
-            for (tile_type in tile_types) {
-                tile_type_priority = getRandomInt(100);
-                if (tile_type_priority*tile_types[tile_type].spawn_chance > choosen_type_priority) {
-                    choosen_type = tile_type;
-                    choosen_type_priority = tile_type_priority;
-                }
-            }
-            try {
-                if (grid[x-1][y].type == "stone" || grid[x][y-1].type == "stone") {
-                    if (getRandomInt(10) > 3) {
-                        choosen_type = 1
-                    }
-                }
-                if ((grid[x-1][y].type == "wall" || grid[x][y-1].type == "wall") && !(grid[x-1][y].type == "wall" && grid[x][y-1].type == "wall")) {
-                    if (getRandomInt(10) > 2) {
-                        choosen_type = 2
-                    }
-                }
-            } catch (e) {
-
-            }
-            grid[x][y] = new tile(choosen_type);
-        }
-    }
+function loop() {
+    draw_grid();
+    handle_user_input();
+    draw_components();
 }
 
 function draw_grid() {
-    tile_size = 16;
-    console.log("Drawing");
+    console.log(camera_x_offset);
+    if (camera_x_offset > 100) {
+        camera_x_offset = 100;
+    } else if (camera_x_offset < -(100*tile_size-canvas.clientWidth) - 100) {
+        camera_x_offset = -(100*tile_size-canvas.clientWidth) - 100;
+    }
+
+    if (camera_y_offset > 100) {
+        camera_y_offset = 100;
+    } else if (camera_y_offset < -(100*tile_size-canvas.clientHeight) - 100) {
+        camera_y_offset = -(100*tile_size-canvas.clientHeight) - 100;
+    }
     var d = new Date();
     var n = d.getTime();
-    console.log(n);
     w = 0;
     g = 0;
 
@@ -96,12 +93,113 @@ function draw_grid() {
             ctx.fillRect(canvas_x+camera_x_offset, canvas_y+camera_y_offset, tile_size-1, tile_size-1);
         }
     }
-
-    console.log("w " + w);
-    console.log("g " + g);
     var d = new Date();
-    var n = d.getTime();
-    console.log(n);
+    var n = d.getTime() - n;
+}
+
+function draw_components() {
+    myGamePiece.newPos("player", last_mouse_x, last_mouse_y);
+    myGamePiece.update();
+    
+    for (unit_index in units) {
+        if (units[unit_index].speedX > 4) {
+            units[unit_index].speedX = 4;
+        } else if (units[unit_index].speedX < -4) {
+            units[unit_index].speedX = -4;
+        }
+
+
+        if (units[unit_index].speedY > 4) {
+            units[unit_index].speedY = 4;
+        } else if (units[unit_index].speedY < -4) {
+            units[unit_index].speedY = -4
+        }
+        units[unit_index].speedX += (getRandomInt(40)-20)/10;
+        units[unit_index].speedY += (getRandomInt(40)-20)/10;
+        units[unit_index].newPos("unit");
+        units[unit_index].update();
+    }
+}
+
+function handle_user_input() {
+    myGamePiece.speedX = 0;
+    myGamePiece.speedY = 0;
+    if (keyboard && (keyboard[65] || keyboard[37])) {
+		myGamePiece.speedX = -2;
+	}
+
+	//right | d = 68, arrow right = 39
+	if (keyboard && (keyboard[68] || keyboard[39])) {
+		myGamePiece.speedX = 2;
+	}
+
+	//up | w = 87, arrow up = 38
+	if (keyboard && (keyboard[87] || keyboard[38])) {
+		myGamePiece.speedY = -2;
+	}
+
+	//down | s = 83, arrow down = 40
+	if (keyboard && (keyboard[83] || keyboard[40])) {
+		myGamePiece.speedY = 2;
+	}
+}
+
+//character sprite class thing
+function component(width, height, color, x, y, type) {
+	this.type = type; //type = whether or not it is an image
+	if (type == "image") {
+		this.image = new Image();
+		this.image.src = color;
+	}
+	this.width = width;
+	this.height = height;
+    this.speedX = 0;
+	this.speedY = 0;   
+	this.angle = 0;
+	this.x = x;
+	this.y = y;
+
+	//update the object's understanding of where it is and how to draw itself
+	this.update = function () {
+		ctx = canvas.getContext("2d");
+		ctx.save();
+		ctx.translate(this.x+camera_x_offset, this.y+camera_y_offset);
+
+		//how to draw itself
+		ctx.rotate(this.angle);
+		if (type == "image") {
+			ctx.drawImage(
+				this.image,
+				this.width / -2,
+				this.height / -2,
+				this.width,
+				this.height
+			);
+		} else {
+			ctx.fillStyle = color;
+			ctx.fillRect(
+				this.width / -2,
+				this.height / -2,
+				this.width,
+				this.height
+			);
+		}
+		ctx.restore();
+	};
+
+	//update understanding of where it is
+	this.newPos = function (type, mouseX, mouseY) {
+		this.x += this.speedX;
+        this.y += this.speedY;
+        if (type == "player") {
+            camera_x_offset -= this.speedX;
+            camera_y_offset -= this.speedY;
+            this.mouseX = mouseX;
+            this.mouseY = mouseY;
+            this.angle = ((Math.atan2((mouseX- (this.x + camera_x_offset)), ((this.y + camera_y_offset) - mouseY))));
+        }
+		
+	};
 }
 
 canvas = document.getElementById("canvas");
@@ -110,17 +208,6 @@ canvas.height = window.innerHeight;
 ctx = canvas.getContext("2d");
 ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-
-setTimeout(function() {
-    ACIConnection.a_authenticate("bots.woc_2021", "AbDc314")
-}, 500);
-    
-setTimeout(function() {
-    ACIConnection.getRequest("map", "gamedata");
-    var d = new Date();
-    var n = d.getTime();
-    console.log(n);
-}, 5000);
 
 var mouse_is_down = false;
 var last_mouse_x = 0;
@@ -134,6 +221,12 @@ canvas.addEventListener("mousemove", e => {
         last_mouse_x = e.x;
         last_mouse_y = e.y;
     }
+
+    var cRect = canvas.getBoundingClientRect(); // Gets CSS pos, and width/height
+    //myGameArea.mouseX = Math.round(e.clientX - cRect.left); // Subtract the 'left' of the canvas
+    //myGameArea.mouseY = Math.round(e.clientY - cRect.top); // from the X/Y positions to make
+    last_mouse_x = e.x;
+    last_mouse_y = e.y;
 });
 
 canvas.addEventListener("mousedown", e => {
@@ -145,3 +238,26 @@ canvas.addEventListener("mousedown", e => {
 canvas.addEventListener("mouseup", e => {
     mouse_is_down = false;
 });
+
+
+
+window.addEventListener("keydown", function (e) {
+    e.preventDefault();
+    keyboard = keyboard || [];
+    keyboard[e.keyCode] = e.type == "keydown";
+});
+
+window.addEventListener("keyup", function (e) {
+    keyboard[e.keyCode] = e.type == "keydown";
+    console.log("Key up" + e.keyCode);
+});
+
+setTimeout(function() {
+    ACIConnection.a_authenticate("bots.woc_2021", "AbDc314");
+    setTimeout(function() {
+        ACIConnection.getRequest("map", "gamedata");
+        var d = new Date();
+        var n = d.getTime();
+        console.log(n);
+    }, 500);
+}, 500);

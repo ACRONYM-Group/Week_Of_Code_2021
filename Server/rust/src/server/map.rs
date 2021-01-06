@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 const CHUNK_SIZE: usize = 100;
-const MAP_SIZE: usize = 5000;
+const MAP_SIZE: usize = 100;
 const MAP_SIZE_CHUNKS: usize = MAP_SIZE / CHUNK_SIZE;
 
 /// Map Data
@@ -166,9 +166,9 @@ pub fn generate_test_map() -> Map
     info!("Generating Test Map");
     let mut map = Map::new();
 
-    for x in 500..=1000
+    for x in 20..=80
     {
-        for y in 500..=1000
+        for y in 20..=80
         {
             *map.get_mut(x, y) = MapElement::Wall;
         }

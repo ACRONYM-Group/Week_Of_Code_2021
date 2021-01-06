@@ -6,7 +6,7 @@ pub fn initialize_logging()
     // Set the default level
     let level = 
         // Specific to debug / release builds
-        if cfg!(debug_assertions) {"trace".to_string()} else {"warn".to_string()} +
+        if cfg!(debug_assertions) {"trace".to_string()} else {"trace".to_string()} +
         // Generic to all builds
         ",tungstenite=error,tokio_tungstenite=error,mio::poll=error";
 

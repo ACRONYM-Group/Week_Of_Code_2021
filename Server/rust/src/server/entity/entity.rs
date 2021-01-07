@@ -108,8 +108,10 @@ impl Entity for Player
     /// Attempt to perform the movement (check for collisions)
     fn attempt_movement(&mut self, map: &crate::server::map::Map, dt: f64) -> bool
     {
-        let movement_portions = vec![self.velocity.dot(cgmath::Vector2::unit_x()) * cgmath::Vector2::unit_x() * dt,
-                                     self.velocity.dot(cgmath::Vector2::unit_y()) * cgmath::Vector2::unit_y() * dt];
+        let movement_speed = map.get(self.position.x as usize, self.position.y as usize).walking_speed().unwrap_or(0.0);
+
+        let movement_portions = vec![self.velocity.dot(cgmath::Vector2::unit_x()) * cgmath::Vector2::unit_x() * dt * movement_speed,
+                                     self.velocity.dot(cgmath::Vector2::unit_y()) * cgmath::Vector2::unit_y() * dt * movement_speed];
 
         let mut current_pos = self.position;
         let mut has_collided = false;

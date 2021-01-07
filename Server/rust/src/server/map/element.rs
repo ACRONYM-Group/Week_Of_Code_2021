@@ -4,7 +4,11 @@ pub enum MapElement
 {
     Grass,
     Wall,
-    Stone
+    Stone,
+    Earth,
+    Sand,
+    RobotBase,
+    AlienBase
 }
 
 impl std::fmt::Display for MapElement
@@ -15,7 +19,11 @@ impl std::fmt::Display for MapElement
         {
             MapElement::Grass => "g",
             MapElement::Stone => "s",
-            MapElement::Wall => "w"
+            MapElement::Wall => "w",
+            MapElement::Earth => "e",
+            MapElement::Sand => "S",
+            MapElement::RobotBase => "r",
+            MapElement::AlienBase => "a"
         })?;
 
         Ok(())
@@ -33,6 +41,10 @@ impl std::str::FromStr for MapElement
             "g" => Ok(MapElement::Grass),
             "s" => Ok(MapElement::Stone),
             "w" => Ok(MapElement::Wall),
+            "e" => Ok(MapElement::Earth),
+            "S" => Ok(MapElement::Sand),
+            "r" => Ok(MapElement::RobotBase),
+            "a" => Ok(MapElement::AlienBase),
             default => Err(format!("Unknown symbol `{}`", default))
         }
     }
@@ -57,7 +69,11 @@ impl MapElement
         {
             MapElement::Grass => Some(1.0),
             MapElement::Stone => Some(1.2),
-            MapElement::Wall => None
+            MapElement::Wall => None,
+            MapElement::Earth => Some(0.8),
+            MapElement::Sand => Some(0.6),
+            MapElement::RobotBase => Some(1.2),
+            MapElement::AlienBase => Some(0.8)
         }
     }
 }

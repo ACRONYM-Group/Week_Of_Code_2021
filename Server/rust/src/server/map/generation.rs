@@ -6,9 +6,9 @@ pub fn generate_test_map() -> Map
     info!("Generating Test Map");
     let mut map = Map::new();
 
-    for x in 500..=1000
+    for x in 20..=22
     {
-        for y in 500..=1000
+        for y in 0..=1000
         {
             *map.get_mut(x, y) = MapElement::Wall;
         }

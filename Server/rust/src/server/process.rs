@@ -2,7 +2,10 @@ use crate::error::GenericResult;
 use crate::error::GenericError;
 use crate::error::ErrorKind;
 
+use super::entity;
 use super::map;
+
+use entity::Entity;
 
 use std::convert::TryFrom;
 use std::io::Write;
@@ -90,7 +93,19 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
     let map = get_map(conn.clone(), &options).await?;
 
     // Dump the updated map to a file
-    dump_map(map, "map.json")?;
+    // dump_map(map, "map.json")?;
 
-    Ok(())
+    // Read the position of the player from the server
+    let mut player = entity::Player::try_from(conn.get_value("gamedata", "player").await?).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?;
+
+    loop
+    {
+        debug!("{}", player.attempt_movement(&map, 0.1));
+        debug!("X: {}", player.position.x);
+        let json_data = serde_json::Value::try_from(&player).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?;
+        conn.set_value("gamedata", "player", json_data).await?;
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    }
+
+    // Ok(())
 }

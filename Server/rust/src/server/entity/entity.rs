@@ -26,7 +26,7 @@ pub struct Player
 {
     bounding_box: super::BoundingBox,
 
-    position: cgmath::Vector2<f64>,
+    pub position: cgmath::Vector2<f64>,
     direction: f64,
 
     velocity: cgmath::Vector2<f64>
@@ -70,20 +70,30 @@ impl std::convert::TryFrom<serde_json::Value> for Player
     }
 }
 
-impl std::convert::TryInto<serde_json::Value> for Player
+impl std::convert::TryFrom<&Player> for serde_json::Value
 {
     type Error = String;
 
-    fn try_into(self) -> Result<serde_json::Value, String>
+    fn try_from(player: &Player) -> Result<serde_json::Value, String>
     {
         let server_representation = ServerRepresentationPlayer
         {
-            dir: self.direction,
-            pos: vec![self.position.x, self.position.y],
-            vel: vec![self.velocity.x, self.velocity.y]
+            dir: player.direction,
+            pos: vec![player.position.x, player.position.y],
+            vel: vec![player.velocity.x, player.velocity.y]
         };
 
         serde_json::to_value(&server_representation).map_err(|e| format!("Unable to convert server representation to json: {}", e))
+    }
+}
+
+impl std::convert::TryFrom<Player> for serde_json::Value
+{
+    type Error = String;
+
+    fn try_from(player: Player) -> Result<serde_json::Value, String>
+    {
+        serde_json::Value::try_from(&player)
     }
 }
 
@@ -117,6 +127,8 @@ impl Entity for Player
                 current_pos = test_pos;
             }
         }
+
+        self.position = current_pos;
 
         has_collided
     }

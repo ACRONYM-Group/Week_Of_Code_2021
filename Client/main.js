@@ -5,15 +5,14 @@ function onConnected() {
         64,
         64,
         "beta-player.png",
-        window.innerWidth / 2,
-        window.innerHeight / 2,
+        800,
+        800,
         "image"
     );
 }
 
 function set_tile_brush(type) {
     tile_type_to_draw = type;
-    console.log(type);
     for (type_index in tile_types) {
         if (tile_types[type_index]["id"] == type) {
             document.getElementById("selected_paint").style.backgroundColor = tile_types[type_index]["color"];
@@ -29,11 +28,13 @@ function onMessage(data) {
         var n = d.getTime();
         console.log(n);
         draw_grid();
+        console.log(grid[0].length);
         remove_prompt("loading_map");
+        console.log(grid[0])
         setInterval(loop, 10);
 
         for (var i = 0; i < 1; i++) {
-            units.push(new component(64, 64, "beta-player.png", getRandomInt(100*tile_size), getRandomInt(100*tile_size), "image"));
+            units.push(new component(64, 64, "beta-player.png", getRandomInt(10*tile_size), getRandomInt(10*tile_size), "image"));
         }
     }
 
@@ -48,13 +49,18 @@ function onMessage(data) {
         var n = d.getTime();
         console.log(n);
         add_prompt("Loading Map...", "this may take a while", "loading_map", "loading");
+        ACIConnection.setRequest("player","gamedata",{"pos": [0, 0], "dir": 3.1415926535, "vel": [1, 0]});
+        ACIConnection.write_to_disk("gamedata");
+    }
+
+    if (data["cmd"] == "write_to_disk") {
+        console.log(data);
     }
 
     if (data["cmd"] == "get_value" && data["key"] == "player" && data["db_key"] == "gamedata") {
-        unit[0].x = data["val"]["pos"][0]*tile_size;
-        unit[0].y = data["val"]["pos"][1]*tile_size;
-        unit[0].angle = data["val"]["dir"];
-        console.log("Putting unit at " + data["val"]["pos"][0] + "," + data["val"]["pos"][1] + " angle: "  + data["val"]["dir"]);
+        units[0].x = data["val"]["pos"][0]*tile_size;
+        units[0].y = data["val"]["pos"][1]*tile_size;
+        units[0].angle = data["val"]["dir"];
     }
 }
 
@@ -64,8 +70,8 @@ ACIConnection.start();
 var myGamePiece;
 var units = [];
 var tile_size = 32;
-var chunk_size = 100;
-var map_width_in_chunks = 4;
+var chunk_size = 32;
+var map_width_in_chunks = 100;
 var brush_size = 4;
 var tile_type_to_draw = "s";
 var keyboard = [];
@@ -77,8 +83,8 @@ tile_types = [
                 {"id":"e", "name":"bare soil", "color":"#999999", "blocks":false},
                 {"id":"S", "name":"sand", "color":"#8f6d0e", "blocks":true},
                 {"id":"s", "name":"stone", "color":"#756b51", "blocks":true},
-                {"id":"r", "name":"robot base", "color":"#2e2e2e", "blocks":true},
-                {"id":"a", "name":"alien base", "color":"#7dba6c", "blocks":true},
+                {"id":"r", "name":"robot base", "color":"#ffe600", "blocks":true},
+                {"id":"a", "name":"alien base", "color":"#5e035a", "blocks":true},
                 {"id":"w", "name":"wall", "color":"#c9c9c9", "blocks":true}
             ];
 
@@ -108,7 +114,7 @@ function sequential_coords_to_x_y(chunks, tiles) {
 
 }
 
-function x_y_to_sequetnial_coords(x, y) {
+function x_y_to_sequential_coords(x, y) {
     tile_x = x;
     tile_y = y;
 
@@ -118,8 +124,8 @@ function x_y_to_sequetnial_coords(x, y) {
     chunk_y = Math.floor(tile_y/chunk_size);
     tile_y -= chunk_y*chunk_size;
 
-    sequential_chunk_number = chunk_y*4*chunk_size + chunk_x*chunk_size;
-    sequential_tile_number = tile_y*100+tile_x;
+    sequential_chunk_number = chunk_y*map_width_in_chunks + chunk_x;
+    sequential_tile_number = tile_y*chunk_size+tile_x;
 
     return [sequential_chunk_number, sequential_tile_number];
 }
@@ -178,43 +184,68 @@ function loop() {
     draw_components();
 }
 
+function grid_to_screen_coordinates(cx, cy, tx, ty) {
+    x = (((cx*chunk_size) + tx)*tile_size) - myGamePiece.x + canvas.clientWidth/2 + camera_x_offset;
+    y = (((cy*chunk_size) + ty)*tile_size) - myGamePiece.y + canvas.clientHeight/2 + camera_y_offset;
+
+    return [x, y];
+}
+
+function screen_to_grid_coordinates(x, y) {
+    plain_grid_x = Math.floor((last_mouse_x-map_camera_x_offset)/tile_size);
+    plain_grid_y = Math.floor((last_mouse_y-map_camera_y_offset)/tile_size);
+
+    chunk_x = Math.floor(plain_grid_x/chunk_size);
+    chunk_y = Math.floor(plain_grid_y/chunk_size);
+
+    tile_x = plain_grid_x - chunk_x*chunk_size;
+    tile_y = plain_grid_y - chunk_y*chunk_size;
+
+    return [[chunk_x, chunk_y], [tile_x, tile_y]];
+}
+
+function grid_to_plain_x_y_coordinates(cx, cy, tx, ty) {
+    x = ((cx*chunk_size) + tx)
+    y = ((cy*chunk_size) + ty)
+    return [x, y];
+}
+
+function get_screen_map_offset() {
+    map_camera_x_offset = -myGamePiece.x + canvas.clientWidth/2 + camera_x_offset;
+    map_camera_y_offset = -myGamePiece.y + canvas.clientHeight/2 + camera_y_offset;
+}
+
 function draw_grid() {
-    if (camera_x_offset > 100) {
-        camera_x_offset = 100;
-    } else if (camera_x_offset < -(100*tile_size-canvas.clientWidth) - 100) {
-        camera_x_offset = -(100*tile_size-canvas.clientWidth) - 100;
-    }
-
-    if (camera_y_offset > 100) {
-        camera_y_offset = 100;
-    } else if (camera_y_offset < -(100*tile_size-canvas.clientHeight) - 100) {
-        camera_y_offset = -(100*tile_size-canvas.clientHeight) - 100;
-    }
-    var d = new Date();
-    var n = d.getTime();
-
+    get_screen_map_offset()
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-    for (var chunk = 0; chunk < 1; chunk++) {
-        for (var tile = 0; tile < 10000; tile++) {
-            chunk_y = Math.floor(chunk/50);
-            chunk_x = chunk - (chunk_y*50);
-            tile_y = Math.floor(tile/100);
-            tile_x = tile - (tile_y*100);
-            canvas_x = (chunk_x*100*tile_size) + (tile_x*tile_size);
-            canvas_y = (chunk_y*100*tile_size) + (tile_y*tile_size);
+    current_chunk = x_y_to_sequential_coords(Math.floor(myGamePiece.x/tile_size), Math.floor(myGamePiece.y/tile_size))[0];
+    chunks_to_draw = [current_chunk,current_chunk-1, current_chunk+1, current_chunk-map_width_in_chunks, current_chunk-map_width_in_chunks-1, current_chunk-map_width_in_chunks+1, current_chunk+map_width_in_chunks, current_chunk+map_width_in_chunks-1, current_chunk+map_width_in_chunks+1];
+    //chunks_to_draw = [current_chunk];
+    for (chunk_index in chunks_to_draw) {
+        chunk = chunks_to_draw[chunk_index];
+        if (typeof grid[chunk] === 'undefined') {
 
-            tile_type = grid[chunk][tile];
-            for (type in tile_types) {
-                if (tile_types[type]["id"] == tile_type) {
-                    ctx.fillStyle = tile_types[type]["color"];
+        } else {
+            for (var tile = 0; tile < chunk_size**2; tile++) {
+                tile_type = grid[chunk][tile];
+                for (type in tile_types) {
+                    if (tile_types[type]["id"] == tile_type) {
+                        ctx.fillStyle = tile_types[type]["color"];
+                    }
                 }
+
+                chunk_y = Math.floor(chunk/map_width_in_chunks);
+                chunk_x = chunk - (chunk_y*map_width_in_chunks);
+                tile_y = Math.floor(tile/chunk_size);
+                tile_x = tile - (tile_y*chunk_size);
+
+                screen_coordinates = grid_to_screen_coordinates(chunk_x, chunk_y, tile_x, tile_y);
+
+                ctx.fillRect(screen_coordinates[0], screen_coordinates[1], tile_size-1, tile_size-1);
             }
-            ctx.fillRect(canvas_x+camera_x_offset, canvas_y+camera_y_offset, tile_size-1, tile_size-1);
         }
     }
-    var d = new Date();
-    var n = d.getTime() - n;
 }
 
 function draw_components() {
@@ -248,22 +279,22 @@ function handle_user_input() {
     myGamePiece.speedX = 0;
     myGamePiece.speedY = 0;
     if (keyboard && (keyboard[65] || keyboard[37])) {
-		myGamePiece.speedX = -2;
+		myGamePiece.speedX = -tile_size*myGamePiece.max_speedX;
 	}
 
 	//right | d = 68, arrow right = 39
 	if (keyboard && (keyboard[68] || keyboard[39])) {
-		myGamePiece.speedX = 2;
+		myGamePiece.speedX = tile_size*myGamePiece.max_speedX;
 	}
 
 	//up | w = 87, arrow up = 38
 	if (keyboard && (keyboard[87] || keyboard[38])) {
-		myGamePiece.speedY = -2;
+		myGamePiece.speedY = -tile_size*myGamePiece.max_speedY;
 	}
 
 	//down | s = 83, arrow down = 40
 	if (keyboard && (keyboard[83] || keyboard[40])) {
-		myGamePiece.speedY = 2;
+		myGamePiece.speedY = tile_size*myGamePiece.max_speedY;
     }
 
     //- key
@@ -287,41 +318,34 @@ function handle_user_input() {
 }
 
 function paint_brush() {
-    draw_tile_x = Math.floor((last_mouse_x-camera_x_offset)/tile_size);
-    draw_tile_y = Math.floor((last_mouse_y-camera_y_offset)/tile_size);
-
-    convert = x_y_to_sequetnial_coords(draw_tile_x, draw_tile_y);
-
-    sequential_chunk_number = convert[0];
-    sequential_tile_number = convert[1];
-
-    chunk_y = Math.floor(draw_tile_y/chunk_size);
-    chunk_x = Math.floor(draw_tile_x/chunk_size);
-
+    grid_coordinates = screen_to_grid_coordinates(last_mouse_x, last_mouse_y);
+    plain_grid_coordinates = grid_to_plain_x_y_coordinates(grid_coordinates[0][0],grid_coordinates[0][1],grid_coordinates[1][0],grid_coordinates[1][1]);
+    screen_coordinates = grid_to_screen_coordinates(grid_coordinates[0][0],grid_coordinates[0][1],grid_coordinates[1][0],grid_coordinates[1][1]);
+    
     ctx.strokeStyle = "#FFFFFF";
     ctx.lineWidth = 2;
     
     for (var x = -brush_size; x <= brush_size; x++) {
         for (var y = -brush_size; y <= brush_size; y++) {
-            ctx.strokeRect(((draw_tile_x+x)+(chunk_x*chunk_size))*tile_size+camera_x_offset, ((draw_tile_y+y)+(chunk_y*chunk_size))*tile_size+camera_y_offset, tile_size, tile_size);
+            current_tile_screen_x = screen_coordinates[0]+x*tile_size;
+            current_tile_screen_y = screen_coordinates[1]+y*tile_size;
+            current_tile_plain_x = plain_grid_coordinates[0]+x;
+            current_tile_plain_y = plain_grid_coordinates[1]+y;
+
+            ctx.strokeRect(current_tile_screen_x, current_tile_screen_y, tile_size, tile_size);
 
             if (middle_mouse_is_down) {
-                convert = x_y_to_sequetnial_coords(draw_tile_x+x, draw_tile_y+y);
+                convert = x_y_to_sequential_coords(current_tile_plain_x,current_tile_plain_y);
 
                 sequential_chunk_number = convert[0];
                 sequential_tile_number = convert[1];
+                console.log(sequential_chunk_number);
                 grid[sequential_chunk_number] = grid[sequential_chunk_number].substring(0, sequential_tile_number) + tile_type_to_draw + grid[sequential_chunk_number].substring(sequential_tile_number + 1);
                 
             }
         }
     }
 
-    //ctx.strokeRect((draw_tile_x+(chunk_x*chunk_size)+camera_x_offset)*tile_size, (draw_tile_y+(chunk_y*chunk_size)+camera_y_offset)*tile_size, tile_size, tile_size);
-
-    // if (middle_mouse_is_down) {
-    //     grid[sequential_chunk_number] = grid[sequential_chunk_number].substring(0, sequential_tile_number) + tile_type_to_draw + grid[sequential_chunk_number].substring(sequential_tile_number + 1);
-        
-    // }
 }
 //character sprite class thing
 function component(width, height, color, x, y, type) {
@@ -336,13 +360,15 @@ function component(width, height, color, x, y, type) {
 	this.speedY = 0;   
 	this.angle = 0;
 	this.x = x;
-	this.y = y;
+    this.y = y;
+    this.max_speedX = 0.5;
+    this.max_speedY = 0.5;
 
 	//update the object's understanding of where it is and how to draw itself
 	this.update = function () {
 		ctx = canvas.getContext("2d");
-		ctx.save();
-		ctx.translate(this.x+camera_x_offset, this.y+camera_y_offset);
+        ctx.save();
+        ctx.translate(this.x-myGamePiece.x+canvas.clientWidth/2+camera_x_offset, this.y-myGamePiece.y+canvas.clientHeight/2+camera_y_offset);
 
 		//how to draw itself
 		ctx.rotate(this.angle);
@@ -375,7 +401,7 @@ function component(width, height, color, x, y, type) {
             // camera_y_offset -= this.speedY;
             this.mouseX = mouseX;
             this.mouseY = mouseY;
-            this.angle = ((Math.atan2((mouseX- (this.x + camera_x_offset)), ((this.y + camera_y_offset) - mouseY))));
+            this.angle = ((Math.atan2((mouseX- (canvas.clientWidth/2 + camera_x_offset)), ((canvas.clientHeight/2+ camera_y_offset) - mouseY))));
         }
 		
 	};
@@ -394,6 +420,8 @@ var last_mouse_x = 0;
 var last_mouse_y = 0;
 var camera_x_offset = 0;
 var camera_y_offset = 0;
+var map_camera_x_offset = 0;
+var map_camera_y_offset = 0;
 canvas.addEventListener("mousemove", e => {
     if (mouse_is_down) {
         var cRect = canvas.getBoundingClientRect(); // Gets CSS pos, and width/height
@@ -417,7 +445,6 @@ canvas.addEventListener("mousedown", e => {
     }
 
     if (e.button == 1) {
-        console.log("right mouse is down");
         middle_mouse_is_down = true;
     }
 });
@@ -438,12 +465,10 @@ window.addEventListener("keydown", function (e) {
     e.preventDefault();
     keyboard = keyboard || [];
     keyboard[e.keyCode] = e.type == "keydown";
-    console.log(e.keyCode);
 });
 
 window.addEventListener("keyup", function (e) {
     keyboard[e.keyCode] = e.type == "keydown";
-    console.log("Key up" + e.keyCode);
 });
 
 

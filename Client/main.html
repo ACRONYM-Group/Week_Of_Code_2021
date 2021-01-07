@@ -44,10 +44,18 @@
     
     </header>
     <canvas id="canvas"></canvas>
+    <div id="prompt_box"></div>
     <div id="paint_bar">
-        <div class="paint_icon" style="background-color: #00FF00;" onclick="set_tile_brush('g')"></div>
-        <div class="paint_icon" style="background-color: #8f6d0e;" onclick="set_tile_brush('w')"></div>
-        <div class="paint_icon" style="background-color: #999999;" onclick="set_tile_brush('s')"></div>
+        <div id="selected_paint" class="paint_icon"></div>
+        <div id="paint_type_selector">
+        </div>
+
+        <div class="paint_controls">
+            <h6 class="paint_controls_text">Paint Brush </h6>
+            <input type="checkbox" id="paint_brush_checkbox">
+
+            <button onclick="submit_map()" style="font-size: 10px; margin: auto;">Done</button>
+        </div>
     </div>
     <script src="./ACIJS/ACI.js"></script>
     <script src="main.js"></script>

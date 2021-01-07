@@ -51,9 +51,9 @@ function onMessage(data) {
     }
 
     if (data["cmd"] == "get_value" && data["key"] == "player" && data["db_key"] == "gamedata") {
-        units[0].x = data["val"]["pos"][0];
-        units[0].y = data["val"]["pos"][1];
-        units[0].angle = data["val"]["dir"];
+        unit[0].x = data["val"]["pos"][0]*tile_size;
+        unit[0].y = data["val"]["pos"][1]*tile_size;
+        unit[0].angle = data["val"]["dir"];
         console.log("Putting unit at " + data["val"]["pos"][0] + "," + data["val"]["pos"][1] + " angle: "  + data["val"]["dir"]);
     }
 }
@@ -74,14 +74,12 @@ var prompts = {};
 var debug_mode = true;
 tile_types = [
                 {"id":"g", "name":"grass", "color":"#009900", "blocks":false},
-                {"id":"s", "name":"stone", "color":"#999999", "tiles":false},
-                {"id":"w", "name":"wall", "color":"#8f6d0e", "block":true},
-                {"id":"e", "name":"wall", "color":"#756b51", "block":true},
-                {"id":"a", "name":"wall", "color":"#2e2e2e", "block":true},
-                {"id":"d", "name":"wall", "color":"#7dba6c", "block":true},
-                {"id":"l", "name":"wall", "color":"#3d4ae0", "block":true},
-                {"id":"S", "name":"wall", "color":"#f0c690", "block":true},
-                {"id":"r", "name":"wall", "color":"#d6547d", "block":true},
+                {"id":"e", "name":"bare soil", "color":"#999999", "blocks":false},
+                {"id":"S", "name":"sand", "color":"#8f6d0e", "blocks":true},
+                {"id":"s", "name":"stone", "color":"#756b51", "blocks":true},
+                {"id":"r", "name":"robot base", "color":"#2e2e2e", "blocks":true},
+                {"id":"a", "name":"alien base", "color":"#7dba6c", "blocks":true},
+                {"id":"w", "name":"wall", "color":"#c9c9c9", "blocks":true}
             ];
 
 for (type in tile_types) {
@@ -373,8 +371,8 @@ function component(width, height, color, x, y, type) {
 		this.x += this.speedX;
         this.y += this.speedY;
         if (type == "player") {
-            camera_x_offset -= this.speedX;
-            camera_y_offset -= this.speedY;
+            // camera_x_offset -= this.speedX;
+            // camera_y_offset -= this.speedY;
             this.mouseX = mouseX;
             this.mouseY = mouseY;
             this.angle = ((Math.atan2((mouseX- (this.x + camera_x_offset)), ((this.y + camera_y_offset) - mouseY))));

@@ -89,6 +89,7 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
     // Load the map, either from the server, or generating the map here
     let map = get_map(conn.clone(), &options).await?;
 
+    // Dump the updated map to a file
     dump_map(map, "map.json")?;
 
     Ok(())

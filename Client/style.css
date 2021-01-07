@@ -17,7 +17,7 @@ canvas {
     position: absolute;
     right: 0;
     top:15%;
-    width: 50px;
+    width: 75px;
     height: 70%;
     z-index: 3;
     background-color: #222222;
@@ -36,9 +36,70 @@ canvas {
     cursor: pointer;
 }
 
+.paint_controls {
+	margin-top:20px;
+	margin-bottom:2px;
+	margin-left:5px;
+}
+
+.paint_controls_text {
+	margin:0;
+}
+
 #canvas
 {
-    z-index: 1;
+    z-index: 3;
+}
+
+#paint_brush_checkbox
+{
+margin-top:0;
+margin-left:35%;
+}
+
+#paint_type_selector
+{
+	width:90%;
+	height: 50%;
+	margin-left:auto;
+	margin-right:auto;
+	overflow-y: scroll;
+	
+}
+
+#selected_paint
+{
+	border-style:solid;
+	border-width: 1px;
+	border-color: white;
+}
+
+#prompt_box
+{
+	width: 50%;
+	height: 50%;
+	z-index: 1;
+	position: absolute;
+	top:25%;
+	left:25%;
+	pointer-events: none;
+	
+}
+.prompt
+{
+	pointer-events: none;
+	z-index: 1;
+	background-color:rgba(50, 50, 50, 0.2);
+	margin:auto;
+	display:flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.prompt_main_text
+{
+	opacity: 1;
 }
 /* Navbar container */
 .navbar {

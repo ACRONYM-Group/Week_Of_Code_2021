@@ -2,13 +2,13 @@ use crate::error::GenericResult;
 use crate::error::GenericError;
 use crate::error::ErrorKind;
 
-use super::entity;
 use super::map;
-
-use entity::Entity;
+use super::state;
 
 use std::convert::TryFrom;
 use std::io::Write;
+
+static update_rate: f64 = 0.05;
 
 /// Create or load the map
 async fn get_map(conn: std::sync::Arc<aci::Connection>, options: &crate::args::Arguments) -> GenericResult<map::Map>
@@ -72,7 +72,7 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
     debug!("Using password `{}`", password);
     
     // Attempt to authenticate with the server
-    if !conn.a_auth("bots.woc_2021", &password).await?
+    if !conn.a_auth("bots.woc_2021", &password).await? // bots.woc_2021
     {
         return Err(GenericError::new("Authentication with ACI server failed".to_string(), ErrorKind::ConnectionError));
     }
@@ -95,16 +95,42 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
     // Dump the updated map to a file
     // dump_map(map, "map.json")?;
 
-    // Read the position of the player from the server
-    let mut player = entity::Player::try_from(conn.get_value("gamedata", "player").await?).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?;
+    let mut game_state = state::GameState::new(conn, map).await?;
+
+    let mut now = std::time::SystemTime::now();
+    let mut time_ellapsed = 0.0;
 
     loop
     {
-        debug!("{}", player.attempt_movement(&map, 0.1));
-        debug!("X: {}", player.position.x);
-        let json_data = serde_json::Value::try_from(&player).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?;
-        conn.set_value("gamedata", "player", json_data).await?;
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        // Get the delta time since the last tick
+        let dt = now.elapsed().map_err(|e| GenericError::new(format!("Unable to calulate dt: {}", e), ErrorKind::EnvironmentError))?.as_millis() as f64 / 1000.0;
+        now = std::time::SystemTime::now();
+
+        time_ellapsed += dt;
+
+        // If this tick has taken too long, add a warning
+        if dt > 0.25
+        {
+            warn!("A tick took {} milliseconds", dt * 1000.0);
+        }
+
+        // Make sure the loop isn't endlessly spinning
+        let timer = tokio::spawn(tokio::time::sleep(tokio::time::Duration::from_millis(1)));
+
+        // Update the game state
+        game_state.tick(dt).await?;
+
+        // If the right amount of time has ellapsed, send the processed data to the server
+        if time_ellapsed > update_rate
+        {
+            time_ellapsed -= update_rate;
+
+            debug!("Updating server");
+            game_state.send_to_server().await?;
+        }
+        
+        // Wait for the timer to ellapse before moving onto the next tick
+        tokio::join!(timer);
     }
 
     // Ok(())

@@ -102,7 +102,7 @@ impl Entity for Player
     /// Perform a game tick on the entity
     fn tick(&mut self, _dt: f64)
     {
-        debug!("Tick the player");
+        // trace!("Tick the player");
     }
 
     /// Attempt to perform the movement (check for collisions)

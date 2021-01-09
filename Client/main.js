@@ -71,7 +71,7 @@ var myGamePiece;
 var units = [];
 var tile_size = 32;
 var chunk_size = 32;
-var map_width_in_chunks = 100;
+var map_width_in_chunks = 12;
 var brush_size = 4;
 var tile_type_to_draw = "s";
 var keyboard = [];
@@ -303,6 +303,12 @@ function handle_user_input() {
             brush_size -= 1;
         }
         keyboard[189] = false;
+    }
+
+    //Space bar (Reset Camera offsets)
+    if (keyboard && (keyboard[32])) {
+        camera_x_offset = 0;
+        camera_y_offset = 0;
     }
 
     //+ key

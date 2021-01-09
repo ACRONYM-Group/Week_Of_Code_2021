@@ -8,7 +8,7 @@ pub fn generate_test_map() -> Map
 
     for x in 20..=22
     {
-        for y in 0..=1000
+        for y in 0..=50
         {
             *map.get_mut(x, y) = MapElement::Wall;
         }

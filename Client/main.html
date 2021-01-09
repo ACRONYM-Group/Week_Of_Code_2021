@@ -6,7 +6,7 @@
 		<link rel="stylesheet" href="style.css" />
 	</head>
 
-<body>
+<body oncontextmenu="return false">
     <header class="navbar">
         <div class="flexbox">
             <div class="logoDiv" style="position: relative;">
@@ -58,6 +58,10 @@
             <button onclick="ACIConnection.write_to_disk('gamedata');" style="font-size: 10px; margin: auto; margin-top:10px;">Write</button>
         </div>
     </div>
+
+    <script src="components.js"></script>
+    <script src="draw.js"></script>
+    <script src="utility.js"></script>
     <script src="./ACIJS/ACI.js"></script>
     <script src="main.js"></script>
 </body>

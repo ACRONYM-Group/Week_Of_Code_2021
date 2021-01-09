@@ -1,3 +1,5 @@
+console.log("hello world");
+
 function onConnected() {
     ACIConnection.a_authenticate("bots.woc_2021", "AbDc314");
     add_prompt("Authenicating...", "Please Wait", "auth", "loading");

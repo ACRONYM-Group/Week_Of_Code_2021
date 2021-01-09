@@ -8,6 +8,8 @@ use super::state;
 use std::convert::TryFrom;
 use std::io::Write;
 
+static update_rate: f64 = 0.05;
+
 /// Create or load the map
 async fn get_map(conn: std::sync::Arc<aci::Connection>, options: &crate::args::Arguments) -> GenericResult<map::Map>
 {
@@ -70,7 +72,7 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
     debug!("Using password `{}`", password);
     
     // Attempt to authenticate with the server
-    if !conn.a_auth("bots.woc_2021", &password).await?
+    if !conn.a_auth("bots.woc_2021", &password).await? // bots.woc_2021
     {
         return Err(GenericError::new("Authentication with ACI server failed".to_string(), ErrorKind::ConnectionError));
     }
@@ -95,10 +97,40 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
 
     let mut game_state = state::GameState::new(conn, map).await?;
 
+    let mut now = std::time::SystemTime::now();
+    let mut time_ellapsed = 0.0;
+
     loop
     {
-        game_state.tick(0.05).await?;
-        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+        // Get the delta time since the last tick
+        let dt = now.elapsed().map_err(|e| GenericError::new(format!("Unable to calulate dt: {}", e), ErrorKind::EnvironmentError))?.as_millis() as f64 / 1000.0;
+        now = std::time::SystemTime::now();
+
+        time_ellapsed += dt;
+
+        // If this tick has taken too long, add a warning
+        if dt > 0.25
+        {
+            warn!("A tick took {} milliseconds", dt * 1000.0);
+        }
+
+        // Make sure the loop isn't endlessly spinning
+        let timer = tokio::spawn(tokio::time::sleep(tokio::time::Duration::from_millis(1)));
+
+        // Update the game state
+        game_state.tick(dt).await?;
+
+        // If the right amount of time has ellapsed, send the processed data to the server
+        if time_ellapsed > update_rate
+        {
+            time_ellapsed -= update_rate;
+
+            debug!("Updating server");
+            game_state.send_to_server().await?;
+        }
+        
+        // Wait for the timer to ellapse before moving onto the next tick
+        tokio::join!(timer);
     }
 
     // Ok(())

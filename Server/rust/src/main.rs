@@ -35,7 +35,7 @@ async fn run() -> GenericResult<()>
 
     // Connect to the server
     info!("Connecting to server");
-    let ip = "35.225.173.218";
+    let ip = "35.225.173.218"; //"35.225.173.218";
     let (conn, listener, _) = aci::connect(ip, 8766).await?;
     let conn = std::sync::Arc::new(conn);
 

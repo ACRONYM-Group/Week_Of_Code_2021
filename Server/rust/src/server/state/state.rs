@@ -39,17 +39,17 @@ impl GameState
         self.player.tick(dt);
         if self.player.attempt_movement(&self.map, dt)
         {
-            debug!("Player encountered a collision");
+            // debug!("Player encountered a collision");
         }
 
-        let c = self.conn.clone();
+        Ok(())
+    }
+
+    /// Send the data back to the server
+    pub async fn send_to_server(&self) -> GenericResult<()>
+    {
         let json_data = serde_json::Value::try_from(&self.player).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?;
-        tokio::spawn(
-            async move
-            {
-                c.set_value("gamedata", "player", json_data).await
-            }
-        );
+        self.conn.set_value("gamedata", "player", json_data).await?;
 
         Ok(())
     }

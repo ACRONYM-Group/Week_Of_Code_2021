@@ -21,7 +21,7 @@ impl Chunk
     /// Get the index of a given position
     pub fn get_index(x: usize, y: usize) -> usize
     {
-        x + y * 100
+        x + y * CHUNK_SIZE
     }
 
     /// Get a value at a particular position

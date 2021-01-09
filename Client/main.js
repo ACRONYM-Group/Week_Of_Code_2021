@@ -4,7 +4,7 @@ function onConnected() {
     myGamePiece = new component(
         64,
         64,
-        "beta-player.png",
+        "graphics/beta-player.png",
         800,
         800,
         "image"
@@ -34,7 +34,7 @@ function onMessage(data) {
         setInterval(loop, 10);
 
         for (var i = 0; i < 1; i++) {
-            units.push(new component(64, 64, "beta-player.png", getRandomInt(10*tile_size), getRandomInt(10*tile_size), "image"));
+            units.push(new component(64, 64, "graphics/beta-player.png", getRandomInt(10*tile_size), getRandomInt(10*tile_size), "image"));
         }
     }
 

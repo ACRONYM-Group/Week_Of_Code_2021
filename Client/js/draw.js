@@ -27,27 +27,27 @@ function draw_grid() {
 				for (type in tile_types) {
 					if (tile_types[type]["id"] == tile_type) {
 						ctx.fillStyle = tile_types[type]["color"];
+
+						chunk_y = Math.floor(chunk / map_width_in_chunks);
+						chunk_x = chunk - chunk_y * map_width_in_chunks;
+						tile_y = Math.floor(tile / chunk_size);
+						tile_x = tile - tile_y * chunk_size;
+
+						screen_coordinates = grid_to_screen_coordinates(
+							chunk_x,
+							chunk_y,
+							tile_x,
+							tile_y
+						);
+						ctx.drawImage(
+							tile_types[type]["image"],
+							screen_coordinates[0],
+							screen_coordinates[1],
+							tile_size,
+							tile_size
+						);
 					}
 				}
-
-				chunk_y = Math.floor(chunk / map_width_in_chunks);
-				chunk_x = chunk - chunk_y * map_width_in_chunks;
-				tile_y = Math.floor(tile / chunk_size);
-				tile_x = tile - tile_y * chunk_size;
-
-				screen_coordinates = grid_to_screen_coordinates(
-					chunk_x,
-					chunk_y,
-					tile_x,
-					tile_y
-				);
-
-				ctx.fillRect(
-					screen_coordinates[0],
-					screen_coordinates[1],
-					tile_size - 1,
-					tile_size - 1
-				);
 			}
 		}
 	}

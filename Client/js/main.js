@@ -67,7 +67,7 @@ function onMessage(data) {
 			dir: 3.1415926535,
 			vel: [1, 0],
 		});
-		ACIConnection.write_to_disk("gamedata");
+		//ACIConnection.write_to_disk("gamedata");
 	}
 
 	if (data["cmd"] == "write_to_disk") {
@@ -109,8 +109,8 @@ tile_types = [
 	{ id: "e", name: "bare soil", color: "#999999", blocks: false },
 	{ id: "S", name: "sand", color: "#8f6d0e", blocks: true },
 	{ id: "s", name: "stone", color: "#756b51", blocks: true },
-	{ id: "r", name: "robot base", color: "#ffe600", blocks: true },
-	{ id: "a", name: "alien base", color: "#5e035a", blocks: true },
+	{ id: "r", name: "robot", color: "#ffe600", blocks: true },
+	{ id: "a", name: "alien", color: "#5e035a", blocks: true },
 	{ id: "w", name: "wall", color: "#c9c9c9", blocks: true },
 ];
 
@@ -120,7 +120,10 @@ for (type in tile_types) {
 		tile_types[type]["color"] +
 		";' onclick=\"set_tile_brush('" +
 		tile_types[type]["id"] +
-        "')\"></div>";
+		"')\"></div>";
+		
+		tile_types[type]["image"] = new Image(32, 32);
+		tile_types[type]["image"].src = "graphics/beta-" + tile_types[type]["name"] + ".png";
 }
 
 class tile {

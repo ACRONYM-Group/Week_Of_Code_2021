@@ -199,60 +199,6 @@ function loop() {
 	draw_components();
 }
 
-function paint_brush() {
-	grid_coordinates = screen_to_grid_coordinates(last_mouse_x, last_mouse_y);
-	plain_grid_coordinates = grid_to_plain_x_y_coordinates(
-		grid_coordinates[0][0],
-		grid_coordinates[0][1],
-		grid_coordinates[1][0],
-		grid_coordinates[1][1]
-	);
-	screen_coordinates = grid_to_screen_coordinates(
-		grid_coordinates[0][0],
-		grid_coordinates[0][1],
-		grid_coordinates[1][0],
-		grid_coordinates[1][1]
-	);
-
-	ctx.strokeStyle = "#FFFFFF";
-	ctx.lineWidth = 2;
-
-	for (var x = -brush_size; x <= brush_size; x++) {
-		for (var y = -brush_size; y <= brush_size; y++) {
-			current_tile_screen_x = screen_coordinates[0] + x * tile_size;
-			current_tile_screen_y = screen_coordinates[1] + y * tile_size;
-			current_tile_plain_x = plain_grid_coordinates[0] + x;
-			current_tile_plain_y = plain_grid_coordinates[1] + y;
-
-			ctx.strokeRect(
-				current_tile_screen_x,
-				current_tile_screen_y,
-				tile_size,
-				tile_size
-			);
-
-			if (middle_mouse_is_down) {
-				convert = x_y_to_sequential_coords(
-					current_tile_plain_x,
-					current_tile_plain_y
-				);
-
-				sequential_chunk_number = convert[0];
-				sequential_tile_number = convert[1];
-				console.log(sequential_chunk_number);
-				grid[sequential_chunk_number] =
-					grid[sequential_chunk_number].substring(
-						0,
-						sequential_tile_number
-					) +
-					tile_type_to_draw +
-					grid[sequential_chunk_number].substring(
-						sequential_tile_number + 1
-					);
-			}
-		}
-	}
-}
 canvas = document.getElementById("canvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -347,34 +293,6 @@ function paint_brush() {
     }
 
 }
-//character sprite class thing
-function component(width, height, color, x, y, type) {
-	this.type = type; //type = whether or not it is an image
-	if (type == "image") {
-		this.image = new Image();
-		this.image.src = color;
-	}
-
-	//- key
-	if (keyboard && keyboard[189]) {
-		if (brush_size > 0) {
-			brush_size -= 1;
-		}
-		keyboard[189] = false;
-	}
-
-	//+ key
-	if (keyboard && keyboard[187]) {
-		brush_size += 1;
-		keyboard[187] = false;
-	}
-
-	paint_brush_enabled = document.getElementById("paint_brush_checkbox")
-		.checked;
-	if (debug_mode && paint_brush_enabled) {
-		paint_brush();
-	}
-}
 
 canvas.addEventListener("mousemove", (e) => {
 	if (mouse_is_down) {
@@ -386,7 +304,7 @@ canvas.addEventListener("mousemove", (e) => {
 	}
 	var cRect = canvas.getBoundingClientRect(); // Gets CSS pos, and width/height
 	last_mouse_x = Math.round(e.clientX - cRect.left); // Subtract the 'left' of the canvas
-	last_mouse_y = Math.round(eclientY - cRect.top); // from the X/Y positions to make
+	last_mouse_y = Math.round(e.clientY - cRect.top); // from the X/Y positions to make
 });
 
 canvas.addEventListener("mousedown", (e) => {

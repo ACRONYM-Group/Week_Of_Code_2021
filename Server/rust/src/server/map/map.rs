@@ -30,7 +30,7 @@ impl Map
     /// Get the index of a given chunk
     pub fn get_chunk_index(x: usize, y: usize) -> usize
     {
-        x + y * 50
+        x + y * MAP_SIZE_CHUNKS
     }
 
     /// Get the chunk at a given index

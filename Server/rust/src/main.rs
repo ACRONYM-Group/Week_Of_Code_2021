@@ -36,7 +36,7 @@ async fn run() -> GenericResult<()>
     // Connect to the server
     info!("Connecting to server");
     let ip = "35.225.173.218"; //"35.225.173.218";
-    let (conn, listener, _) = aci::connect(ip, 8766).await?;
+    let (conn, listener, event_channel) = aci::connect(ip, 8766).await?;
     let conn = std::sync::Arc::new(conn);
 
     // Start the listener
@@ -44,7 +44,7 @@ async fn run() -> GenericResult<()>
     tokio::spawn(listener);
 
     // Start the server process
-    match server::execute(conn.clone(), opts).await
+    match server::execute(conn.clone(), opts, event_channel).await
     {
         // If the server process exits normally, close the connection
         Ok(()) =>

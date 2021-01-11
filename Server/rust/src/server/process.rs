@@ -24,7 +24,6 @@ pub async fn get_map(conn: std::sync::Arc<aci::Connection>, options: &crate::arg
 
             info!("Clearing the map on the server");
             let setter = tokio::spawn(async move {conn.set_value("gamedata", "map", json_data).await});
-
             info!("Done Sending");
 
             tokio::join!(setter).0.map_err(|_| GenericError::new("Map send handler failed".to_string(), ErrorKind::ConnectionError))??;
@@ -129,7 +128,10 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
         }
 
         // Wait for the timer to ellapse before moving onto the next tick
-        tokio::join!(timer);
+        if let Err(e) = tokio::join!(timer).0
+        {
+            warn!("Unable to join timer: {}", e);
+        }
     }
 
     // Ok(())

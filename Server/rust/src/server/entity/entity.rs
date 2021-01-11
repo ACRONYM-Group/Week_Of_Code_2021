@@ -22,6 +22,7 @@ struct ServerRepresentationPlayer
 }
 
 /// Game Player
+#[derive(Debug, Clone)]
 pub struct Player
 {
     bounding_box: super::BoundingBox,

@@ -6,12 +6,14 @@ use std::convert::TryFrom;
 
 use crate::server::entity::entity::Entity;
 
+use std::collections::HashMap;
+
 /// State of the game
 pub struct GameState
 {
     pub conn: std::sync::Arc<aci::Connection>,
     pub map: crate::server::map::Map,
-    pub player: crate::server::entity::Player,
+    pub players: HashMap<String, crate::server::entity::Player>,
     pub event_listener: tokio::sync::mpsc::Receiver<aci::event::ACIEvent>,
     pub opts: crate::args::Arguments
 }
@@ -23,14 +25,29 @@ impl GameState
     {
         // Read the position of the player from the server
         debug!("Loading player data from the server");
-        let player = crate::server::entity::Player::try_from(
-                            conn.get_value("gamedata", "player").await?
-                        ).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?;
-        
+        let player_data = conn.get_value("gamedata", "playerdata").await?;
+
+        let players = if let serde_json::Value::Object(map) = player_data
+        {
+            let mut players = HashMap::new();
+
+            for (k, v) in map
+            {
+                let player = crate::server::entity::Player::try_from(v).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?;
+                players.insert(k, player);
+            }
+
+            players
+        }
+        else
+        {
+            return Err(GenericError::new(format!("Player data from the server is not an object"), ErrorKind::ParsingError));
+        };
+
         Ok(
             GameState
             {
-                conn, map, player, event_listener,
+                conn, map, players, event_listener,
                 opts: options
             }
         )
@@ -39,10 +56,10 @@ impl GameState
     /// Update the game state
     pub async fn tick(&mut self, dt: f64) -> GenericResult<()>
     {
-        self.player.tick(dt);
-        if self.player.attempt_movement(&self.map, dt)
+        for (_, player) in self.players.iter_mut()
         {
-            // debug!("Player encountered a collision");
+            player.tick(dt);
+            player.attempt_movement(&self.map, dt);
         }
 
         if let Ok(_event) = self.event_listener.try_recv()
@@ -53,12 +70,27 @@ impl GameState
         Ok(())
     }
 
+    /// Generate json for the player data
+    fn generate_player_json(&self) -> GenericResult<serde_json::Value>
+    {
+        let mut player_data_hashmap = HashMap::new();
+
+        for (key, player) in &self.players
+        {
+            let json_data = serde_json::Value::try_from(player).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?;
+            player_data_hashmap.insert(key.clone(), json_data);
+        }
+
+        Ok(json!(player_data_hashmap))
+    }
+
     /// Send the data back to the server
     pub async fn send_to_server(&self) -> GenericResult<()>
     {
-        let json_data = serde_json::Value::try_from(&self.player).map_err(|e| GenericError::new(e, ErrorKind::ParsingError))?;
+        let json_data = self.generate_player_json()?;
         let conn = self.conn.clone();
 
+        // Spawn a seperate async process to send the data back to the server
         tokio::spawn(async move {conn.set_value("gamedata", "player", json_data).await});
 
         Ok(())

@@ -1,4 +1,5 @@
 /// Bounding box for various entities, size is the width of the bounding box, the bounding box is always a square
+#[derive(Debug, Clone)]
 pub struct BoundingBox
 {
     size: f64

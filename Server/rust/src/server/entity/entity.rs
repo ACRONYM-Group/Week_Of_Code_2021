@@ -28,9 +28,9 @@ pub struct Player
     bounding_box: super::BoundingBox,
 
     pub position: cgmath::Vector2<f64>,
-    direction: f64,
+    pub direction: f64,
 
-    velocity: cgmath::Vector2<f64>
+    pub velocity: cgmath::Vector2<f64>
 }
 
 impl std::convert::TryFrom<serde_json::Value> for Player

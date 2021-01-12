@@ -62,9 +62,37 @@ impl GameState
             player.attempt_movement(&self.map, dt);
         }
 
-        if let Ok(_event) = self.event_listener.try_recv()
+        if let Ok(event) = self.event_listener.try_recv()
         {
-            self.map = super::super::process::get_map(self.conn.clone(), &self.opts).await?;
+            let origin = event.source.clone();
+
+            // Ensure the event has a json object as its data value
+            if let serde_json::Value::Object(event_data) = event.consume()
+            {
+                // Ensure the event type is a string
+                if let Some(serde_json::Value::String(event_type)) = event_data.get("type")
+                {
+                    match event_type.as_str()
+                    {
+                        // Type: reload | Reloads the map from the database, may take several seconds
+                        "reload" =>
+                        {
+                            self.map = super::super::process::get_map(self.conn.clone(), &self.opts).await?;
+                        },
+
+                        // Display an error message if the event is not recognized
+                        default => error!("Unknown event type `{}` from `{}`", default, origin)
+                    }
+                }
+                else
+                {
+                    error!("Unable to extract event type from event recieved from `{}`", origin);
+                }
+            }
+            else
+            {
+                error!("Recieved event from `{}` which is not an object", origin);
+            }
         }
 
         Ok(())

@@ -121,6 +121,12 @@ impl GameState
                             self.reload_map(event_data).await?;
                         },
 
+                        // Type: move | Moves a player
+                        "move" =>
+                        {
+                            self.movement_update(event_data).await?;
+                        }
+
                         // Display an error message if the event is not recognized
                         default => warn!("Unknown event type `{}` from `{}`", default, origin)
                     }

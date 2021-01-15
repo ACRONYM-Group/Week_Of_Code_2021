@@ -123,7 +123,7 @@ for (type in tile_types) {
 		"')\"></div>";
 		
 		tile_types[type]["image"] = new Image(32, 32);
-		tile_types[type]["image"].src = "graphics/beta-" + tile_types[type]["name"] + ".png";
+		tile_types[type]["image"].src = "graphics/tiles/beta-" + tile_types[type]["name"] + ".png";
 }
 
 class tile {

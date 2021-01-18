@@ -4,7 +4,7 @@ function onConnected() {
 	myGamePiece = new component(
 		64,
 		64,
-		"graphics/beta-player.png",
+		"graphics/units/beta-player.png",
 		800,
 		800,
 		"image"
@@ -33,7 +33,7 @@ function onMessage(data) {
 				new component(
 					64,
 					64,
-					"graphics/beta-player.png",
+					"graphics/units/beta-player.png",
 					getRandomInt(10 * tile_size),
 					getRandomInt(10 * tile_size),
 					"image"
@@ -123,7 +123,7 @@ for (type in tile_types) {
 		"')\"></div>";
 		
 		tile_types[type]["image"] = new Image(32, 32);
-		tile_types[type]["image"].src = "graphics/beta-" + tile_types[type]["name"] + ".png";
+		tile_types[type]["image"].src = "graphics/tiles/beta-" + tile_types[type]["name"] + ".png";
 }
 
 class tile {

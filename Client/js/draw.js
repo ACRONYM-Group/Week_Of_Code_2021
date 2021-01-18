@@ -39,6 +39,7 @@ function draw_grid() {
 							tile_x,
 							tile_y
 						);
+
 						ctx.drawImage(
 							tile_types[type]["image"],
 							screen_coordinates[0],

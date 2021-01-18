@@ -8,10 +8,10 @@ use super::state;
 use std::convert::TryFrom;
 use std::io::Write;
 
-static update_rate: f64 = 0.05;
+static UPDATE_RATES: f64 = 0.05;
 
 /// Create or load the map
-async fn get_map(conn: std::sync::Arc<aci::Connection>, options: &crate::args::Arguments) -> GenericResult<map::Map>
+pub async fn get_map(conn: std::sync::Arc<aci::Connection>, options: &crate::args::Arguments) -> GenericResult<map::Map>
 {
     if !options.load_map
     {
@@ -24,7 +24,6 @@ async fn get_map(conn: std::sync::Arc<aci::Connection>, options: &crate::args::A
 
             info!("Clearing the map on the server");
             let setter = tokio::spawn(async move {conn.set_value("gamedata", "map", json_data).await});
-
             info!("Done Sending");
 
             tokio::join!(setter).0.map_err(|_| GenericError::new("Map send handler failed".to_string(), ErrorKind::ConnectionError))??;
@@ -60,7 +59,7 @@ fn dump_map(map: map::Map, path: &str) -> GenericResult<()>
 }
 
 /// Execute the main portion of the game server
-pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args::Arguments) -> GenericResult<()>
+pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args::Arguments, event_listener: tokio::sync::mpsc::Receiver<aci::event::ACIEvent>) -> GenericResult<()>
 {
     trace!("Starting server process");
 
@@ -95,7 +94,7 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
     // Dump the updated map to a file
     // dump_map(map, "map.json")?;
 
-    let mut game_state = state::GameState::new(conn, map).await?;
+    let mut game_state = state::GameState::new(conn, map, event_listener, options).await?;
 
     let mut now = std::time::SystemTime::now();
     let mut time_ellapsed = 0.0;
@@ -121,16 +120,18 @@ pub async fn execute(conn: std::sync::Arc<aci::Connection>, options: crate::args
         game_state.tick(dt).await?;
 
         // If the right amount of time has ellapsed, send the processed data to the server
-        if time_ellapsed > update_rate
+        if time_ellapsed > UPDATE_RATES
         {
-            time_ellapsed -= update_rate;
+            time_ellapsed -= UPDATE_RATES;
 
-            debug!("Updating server");
             game_state.send_to_server().await?;
         }
-        
+
         // Wait for the timer to ellapse before moving onto the next tick
-        tokio::join!(timer);
+        if let Err(e) = tokio::join!(timer).0
+        {
+            warn!("Unable to join timer: {}", e);
+        }
     }
 
     // Ok(())

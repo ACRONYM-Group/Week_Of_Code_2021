@@ -22,14 +22,15 @@ struct ServerRepresentationPlayer
 }
 
 /// Game Player
+#[derive(Debug, Clone)]
 pub struct Player
 {
     bounding_box: super::BoundingBox,
 
     pub position: cgmath::Vector2<f64>,
-    direction: f64,
+    pub direction: f64,
 
-    velocity: cgmath::Vector2<f64>
+    pub velocity: cgmath::Vector2<f64>
 }
 
 impl std::convert::TryFrom<serde_json::Value> for Player
@@ -53,7 +54,7 @@ impl std::convert::TryFrom<serde_json::Value> for Player
             return Err(format!("Velocity read from json does not have both an x and y value"));
         }
 
-        let bounding_box = super::BoundingBox::new(4.0);
+        let bounding_box = super::BoundingBox::new(1.95);
         let position = cgmath::Vector2::<f64>::new(v.pos[0], v.pos[1]);
         let velocity = cgmath::Vector2::<f64>::new(v.vel[0], v.vel[1]);
         let direction = v.dir;
@@ -108,7 +109,7 @@ impl Entity for Player
     /// Attempt to perform the movement (check for collisions)
     fn attempt_movement(&mut self, map: &crate::server::map::Map, dt: f64) -> bool
     {
-        let movement_speed = map.get(self.position.x as usize, self.position.y as usize).walking_speed().unwrap_or(0.0);
+        let movement_speed = 4.0 * map.get(self.position.x as usize, self.position.y as usize).walking_speed().unwrap_or(0.0);
 
         let movement_portions = vec![self.velocity.dot(cgmath::Vector2::unit_x()) * cgmath::Vector2::unit_x() * dt * movement_speed,
                                      self.velocity.dot(cgmath::Vector2::unit_y()) * cgmath::Vector2::unit_y() * dt * movement_speed];

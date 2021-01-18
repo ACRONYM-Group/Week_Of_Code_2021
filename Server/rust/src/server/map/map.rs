@@ -1,5 +1,7 @@
+use core::f64;
+
 use crate::error::{GenericError, GenericResult, ErrorKind};
-use super::{CHUNK_SIZE, MAP_SIZE_CHUNKS, Chunk, MapElement};
+use super::{CHUNK_SIZE, MAP_SIZE_CHUNKS, MAP_SIZE, Chunk, MapElement};
 
 /// The global map
 pub struct Map
@@ -30,7 +32,7 @@ impl Map
     /// Get the index of a given chunk
     pub fn get_chunk_index(x: usize, y: usize) -> usize
     {
-        x + y * 50
+        x + y * MAP_SIZE_CHUNKS
     }
 
     /// Get the chunk at a given index
@@ -68,7 +70,7 @@ impl Map
     /// Check if there is a collision at a given x and y
     pub fn check_collision(&self, x: f64, y: f64) -> bool
     {
-        self.get(x as usize, y as usize).walking_speed().is_none()
+        x < 0.0 || y < 0.0 || x > (MAP_SIZE - 1) as f64 || y > (MAP_SIZE - 1) as f64 || self.get(x as usize, y as usize).walking_speed().is_none()
     }
 }
 

@@ -4,7 +4,7 @@ function onConnected() {
 	myGamePiece = new component(
 		64,
 		64,
-		"graphics/beta-player.png",
+		"graphics/units/beta-player.png",
 		800,
 		800,
 		"image"
@@ -33,7 +33,7 @@ function onMessage(data) {
 				new component(
 					64,
 					64,
-					"graphics/beta-player.png",
+					"graphics/units/beta-player.png",
 					getRandomInt(10 * tile_size),
 					getRandomInt(10 * tile_size),
 					"image"

@@ -5,6 +5,7 @@ use crate::error::ErrorKind;
 use std::convert::TryFrom;
 
 use crate::server::entity::entity::Entity;
+use crate::server::entity::Player;
 
 use std::collections::HashMap;
 
@@ -91,7 +92,7 @@ impl GameState
         let conn = self.conn.clone();
 
         // Spawn a seperate async process to send the data back to the server
-        tokio::spawn(async move {conn.set_value("gamedata", "player", json_data).await});
+        tokio::spawn(async move {conn.set_value("gamedata", "playerdata", json_data).await});
 
         Ok(())
     }
@@ -103,43 +104,57 @@ impl GameState
     /// Handle any recieved events if an event has been recieved (will not block)
     async fn check_for_events(&mut self) -> GenericResult<()>
     {
-        if let Ok(event) = self.event_listener.try_recv()
+        match self.event_listener.try_recv()
         {
-            let origin = event.source.clone();
-
-            // Ensure the event has a json object as its data value
-            if let serde_json::Value::Object(event_data) = event.consume()
+            Ok(event) =>
             {
-                // Ensure the event type is a string
-                if let Some(serde_json::Value::String(event_type)) = event_data.get("type")
+                let origin = event.source.clone();
+    
+                // Ensure the event has a json object as its data value
+                if let serde_json::Value::Object(event_data) = event.consume()
                 {
-                    match event_type.as_str()
+                    // Ensure the event type is a string
+                    if let Some(serde_json::Value::String(event_type)) = event_data.get("type")
                     {
-                        // Type: reload | Reloads the map from the database, may take several seconds
-                        "reload" =>
+                        match event_type.as_str()
                         {
-                            self.reload_map(event_data).await?;
-                        },
+                            // Type: reload | Reloads the map from the database, may take several seconds
+                            "reload" =>
+                            {
+                                self.reload_map(event_data).await?;
+                            },
+    
+                            // Type: move | Moves a player
+                            "move" =>
+                            {
+                                self.movement_update(event_data).await?;
+                            },
 
-                        // Type: move | Moves a player
-                        "move" =>
-                        {
-                            self.movement_update(event_data).await?;
+                            // Type: join | Connects a new player
+                            "join" =>
+                            {
+                                self.add_player(event_data).await?;
+                            }
+    
+                            // Display an error message if the event is not recognized
+                            default => warn!("Unknown event type `{}` from `{}`", default, origin)
                         }
-
-                        // Display an error message if the event is not recognized
-                        default => warn!("Unknown event type `{}` from `{}`", default, origin)
+                    }
+                    else
+                    {
+                        warn!("Unable to extract event type from event recieved from `{}`", origin);
                     }
                 }
                 else
                 {
-                    warn!("Unable to extract event type from event recieved from `{}`", origin);
+                    warn!("Recieved event from `{}` which is not an object", origin);
                 }
-            }
-            else
+            },
+            Err(tokio::sync::mpsc::error::TryRecvError::Closed) =>
             {
-                warn!("Recieved event from `{}` which is not an object", origin);
-            }
+                error!("Event listener has closed");
+            },
+            _ => {}
         }
 
         Ok(())
@@ -179,8 +194,12 @@ impl GameState
                             // If the player is in the player database
                             if let Some(player) = self.players.get_mut(name)
                             {
-                                player.position.x = x;
-                                player.position.y = y;
+                                player.velocity.x = x;
+                                player.velocity.y = y;
+                            }
+                            else
+                            {
+                                warn!("Cannot update velocity of player `{}`, not found", name);
                             }
                         }
                         else
@@ -206,6 +225,17 @@ impl GameState
         else
         {
             warn!("Unable to extract string `name` from movement packet");
+        }
+
+        Ok(())
+    }
+
+    /// Add a new player packet
+    async fn add_player(&mut self, data: serde_json::Map<String, serde_json::Value>) -> GenericResult<()>
+    {
+        if let Some(serde_json::Value::String(name)) = data.get("name")
+        {
+            self.players.insert(name.clone(), Player::new());
         }
 
         Ok(())

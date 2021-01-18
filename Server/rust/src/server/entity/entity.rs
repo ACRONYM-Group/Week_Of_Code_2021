@@ -33,6 +33,21 @@ pub struct Player
     pub velocity: cgmath::Vector2<f64>
 }
 
+impl Player
+{
+    /// Create a new player at the spawn location
+    pub fn new() -> Self
+    {
+        Self
+        {
+            bounding_box: super::BoundingBox::new(1.95),
+            position: cgmath::Vector2::<f64>::new(3.0, 3.0),
+            velocity: cgmath::Vector2::<f64>::new(0.0, 0.0),
+            direction: 0.0
+        }
+    }
+}
+
 impl std::convert::TryFrom<serde_json::Value> for Player
 {
     type Error = String;
@@ -109,7 +124,7 @@ impl Entity for Player
     /// Attempt to perform the movement (check for collisions)
     fn attempt_movement(&mut self, map: &crate::server::map::Map, dt: f64) -> bool
     {
-        let movement_speed = 4.0 * map.get(self.position.x as usize, self.position.y as usize).walking_speed().unwrap_or(0.0);
+        let movement_speed = 16.0 * map.get(self.position.x as usize, self.position.y as usize).walking_speed().unwrap_or(0.0);
 
         let movement_portions = vec![self.velocity.dot(cgmath::Vector2::unit_x()) * cgmath::Vector2::unit_x() * dt * movement_speed,
                                      self.velocity.dot(cgmath::Vector2::unit_y()) * cgmath::Vector2::unit_y() * dt * movement_speed];
